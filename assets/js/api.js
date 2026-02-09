@@ -41,16 +41,16 @@ const mockData = {
 };
 
 const API = {
-    getTeams: () => Promise.resolve(mockData.teams),
-    getTenants: () => Promise.resolve(mockData.tenants),
-    getPortfolios: () => Promise.resolve(mockData.portfolios),
-    getLogs: () => Promise.resolve(mockData.logs),
-    getStats: () => Promise.resolve({
+    getTeams: () => new Promise(resolve => setTimeout(() => resolve(mockData.teams), 300)),
+    getTenants: () => new Promise(resolve => setTimeout(() => resolve(mockData.tenants), 400)),
+    getPortfolios: () => new Promise(resolve => setTimeout(() => resolve(mockData.portfolios), 300)),
+    getLogs: () => new Promise(resolve => setTimeout(() => resolve(mockData.logs), 500)),
+    getStats: () => new Promise(resolve => setTimeout(() => resolve({
         corePages: 7,
         portals: 6,
         userRoles: 4,
         functional: '100%'
-    })
+    }), 200))
 };
 
 window.API = API;
