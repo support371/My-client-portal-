@@ -21,7 +21,6 @@ const AuthContext = createContext<AuthContextType | null>(null)
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null)
-  const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
     const stored = localStorage.getItem("gem_session")
@@ -32,7 +31,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         localStorage.removeItem("gem_session")
       }
     }
-    setMounted(true)
   }, [])
 
   const login = useCallback((email: string, password: string): boolean => {
@@ -55,32 +53,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.removeItem("gem_session")
     setSession(null)
   }, [])
-
-  if (!mounted) {
-    return (
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          minHeight: "100dvh",
-          background: "#0a0e14",
-        }}
-      >
-        <div
-          style={{
-            width: 32,
-            height: 32,
-            borderRadius: "50%",
-            border: "3px solid rgba(0,255,159,0.15)",
-            borderTopColor: "#00ff9f",
-            animation: "spin 0.6s linear infinite",
-          }}
-        />
-        <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
-      </div>
-    )
-  }
 
   return (
     <AuthContext.Provider value={{ session, login, logout, isAuthenticated: !!session }}>
