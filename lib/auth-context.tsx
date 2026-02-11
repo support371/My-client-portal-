@@ -57,7 +57,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [])
 
   if (!mounted) {
-    return null
+    return (
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          minHeight: "100dvh",
+          background: "#0a0e14",
+        }}
+      >
+        <div
+          style={{
+            width: 32,
+            height: 32,
+            borderRadius: "50%",
+            border: "3px solid rgba(0,255,159,0.15)",
+            borderTopColor: "#00ff9f",
+            animation: "spin 0.6s linear infinite",
+          }}
+        />
+        <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
+      </div>
+    )
   }
 
   return (
