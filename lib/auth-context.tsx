@@ -1,7 +1,31 @@
 "use client"
 
-import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from "react"
+import { createContext, useContext, useState, useEffect, useCallback, useMemo, useSyncExternalStore, type ReactNode } from "react"
 import { USERS, type UserRole } from "./data"
+
+const listeners = new Set<() => void>()
+
+function subscribe(onStoreChange: () => void) {
+  listeners.add(onStoreChange)
+  window.addEventListener("storage", onStoreChange)
+  return () => {
+    listeners.delete(onStoreChange)
+    window.removeEventListener("storage", onStoreChange)
+  }
+}
+
+function notify() {
+  listeners.forEach((l) => l())
+}
+
+function getSnapshot() {
+  if (typeof window === "undefined") return null
+  return localStorage.getItem("gem_session")
+}
+
+function getServerSnapshot() {
+  return null
+}
 
 type Session = {
   email: string
@@ -21,20 +45,24 @@ type AuthContextType = {
 const AuthContext = createContext<AuthContextType | null>(null)
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [session, setSession] = useState<Session | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
+  const [isMounted, setIsMounted] = useState(false)
 
   useEffect(() => {
-    const stored = localStorage.getItem("gem_session")
-    if (stored) {
-      try {
-        setSession(JSON.parse(stored))
-      } catch {
-        localStorage.removeItem("gem_session")
-      }
-    }
-    setIsLoading(false)
+    setIsMounted(true)
   }, [])
+
+  const sessionStr = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot)
+
+  const session = useMemo(() => {
+    if (!isMounted || !sessionStr) return null
+    try {
+      return JSON.parse(sessionStr) as Session
+    } catch {
+      return null
+    }
+  }, [isMounted, sessionStr])
+
+  const isLoading = !isMounted
 
   const login = useCallback((email: string, password: string): boolean => {
     const user = USERS[email]
@@ -46,7 +74,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         loginTime: new Date().toISOString(),
       }
       localStorage.setItem("gem_session", JSON.stringify(newSession))
-      setSession(newSession)
+      notify()
       return true
     }
     return false
@@ -54,11 +82,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logout = useCallback(() => {
     localStorage.removeItem("gem_session")
-    setSession(null)
+    notify()
   }, [])
 
+  const isAuthenticated = !!session
+
   return (
-    <AuthContext.Provider value={{ session, login, logout, isAuthenticated: !!session, isLoading }}>
+    <AuthContext.Provider value={{ session, login, logout, isAuthenticated, isLoading }}>
       {children}
     </AuthContext.Provider>
   )

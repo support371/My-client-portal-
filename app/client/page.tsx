@@ -4,8 +4,8 @@ import { useAuth } from "@/lib/auth-context"
 import { AuthGuard } from "@/components/auth-guard"
 import { PortalHeader } from "@/components/portal-header"
 import { GlassCard } from "@/components/glass-card"
-import { transactions } from "@/lib/data"
-import { Briefcase, ArrowUpRight, ArrowDownRight } from "lucide-react"
+import { transactions, portfolios } from "@/lib/data"
+import { Briefcase, ArrowUpRight, ArrowDownRight, ShieldCheck } from "lucide-react"
 
 export default function ClientPage() {
   const { session } = useAuth()
@@ -28,24 +28,62 @@ export default function ClientPage() {
         </div>
 
         <div className="mt-6 grid gap-4 md:grid-cols-2">
-          {/* Portfolio Summary */}
+          {/* Portfolios Section */}
           <GlassCard>
-            <h3 className="mb-4 text-base font-bold text-foreground">Portfolio Summary</h3>
-            <div className="rounded-xl border border-glass-border bg-gradient-to-br from-primary/10 to-secondary/10 p-5 text-center">
-              <p className="text-xs font-medium uppercase tracking-wider text-muted">Total Balance</p>
-              <p className="mt-2 text-4xl font-extrabold text-primary md:text-5xl">$100,000.00</p>
-              <div className="mt-2 flex items-center justify-center gap-1 text-sm font-bold text-primary">
-                <ArrowUpRight className="h-4 w-4" />
-                +2.45% (Past 24h)
-              </div>
+            <div className="mb-4 flex items-center justify-between">
+              <h3 className="text-base font-bold text-foreground">Linked Accounts</h3>
+              <span className="text-[10px] font-bold text-muted uppercase tracking-tighter">Status: Synchronized</span>
             </div>
-            <div className="mt-4 flex gap-3">
-              <button className="flex-1 rounded-lg bg-gradient-to-r from-primary to-secondary py-2.5 text-sm font-bold text-primary-foreground transition-transform hover:scale-[1.02]">
-                Deposit
-              </button>
-              <button className="flex-1 rounded-lg border border-glass-border py-2.5 text-sm font-bold text-primary transition-colors hover:bg-primary/10">
-                Withdraw
-              </button>
+
+            <div className="space-y-4">
+              {/* Demo Portfolio */}
+              <div className="group relative overflow-hidden rounded-xl border border-glass-border bg-gradient-to-br from-primary/10 to-secondary/10 p-5 transition-all hover:border-primary/50">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <p className="text-xs font-medium uppercase tracking-wider text-muted">Demo Portfolio</p>
+                      <span className="rounded-full bg-primary/20 px-2 py-0.5 text-[9px] font-bold text-primary">ACTIVE</span>
+                    </div>
+                    <p className="mt-1 text-3xl font-extrabold text-primary">$100,000.00</p>
+                    <div className="mt-1 flex items-center gap-1 text-xs font-bold text-primary">
+                      <ArrowUpRight className="h-3 w-3" />
+                      +2.45%
+                    </div>
+                  </div>
+                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-primary">
+                    <Briefcase className="h-5 w-5" />
+                  </div>
+                </div>
+                <div className="mt-4 flex gap-2">
+                  <button className="flex-1 rounded-md bg-primary/20 py-1.5 text-xs font-bold text-primary transition-colors hover:bg-primary/30">
+                    Trading
+                  </button>
+                  <button className="flex-1 rounded-md bg-primary/20 py-1.5 text-xs font-bold text-primary transition-colors hover:bg-primary/30">
+                    History
+                  </button>
+                </div>
+              </div>
+
+              {/* Official Portfolio */}
+              <div className="group relative overflow-hidden rounded-xl border border-glass-border bg-surface/50 p-5 transition-all">
+                <div className="flex justify-between items-start">
+                  <div className="opacity-60">
+                    <div className="flex items-center gap-2">
+                      <p className="text-xs font-medium uppercase tracking-wider text-muted">Official Portfolio</p>
+                      <span className="rounded-full bg-muted/20 px-2 py-0.5 text-[9px] font-bold text-muted">PENDING</span>
+                    </div>
+                    <p className="mt-1 text-3xl font-extrabold text-foreground">$0.00</p>
+                  </div>
+                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-muted/10 text-muted">
+                    <ShieldCheck className="h-5 w-5" />
+                  </div>
+                </div>
+                <div className="mt-4">
+                  <button className="w-full rounded-lg bg-gradient-to-r from-primary to-secondary py-2 text-xs font-bold text-primary-foreground shadow-lg shadow-primary/20 transition-transform hover:scale-[1.02]">
+                    Complete Identity Verification
+                  </button>
+                </div>
+              </div>
             </div>
           </GlassCard>
 

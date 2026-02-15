@@ -80,6 +80,8 @@ export const portfolios: Portfolio[] = [
   { id: "P-001", client: "John Doe", value: "$124,500", change: "+5.2%", status: "Active" },
   { id: "P-002", client: "Alice Smith", value: "$89,200", change: "-1.4%", status: "Active" },
   { id: "P-003", client: "Bob Johnson", value: "$450,000", change: "+12.8%", status: "Active" },
+  { id: "P-004", client: "Platform Client", value: "$100,000", change: "+2.45%", status: "Active" },
+  { id: "P-005", client: "Platform Client", value: "$0", change: "0%", status: "Inactive" },
 ]
 
 export const logs: LogEntry[] = [
