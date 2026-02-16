@@ -107,3 +107,55 @@ export const aiLogs = [
   { time: "10:44:55", agent: "ClientConcierge", action: "Responding to inquiry #8831...", color: "warning" as const },
   { time: "10:44:50", agent: "MarketAnalyst", action: "Adjusting risk parameters...", color: "primary" as const },
 ]
+
+export const assetAllocation = [
+  { category: "STOCK", value: 245000, percentage: 50.24, count: 12, color: "primary" },
+  { category: "CRYPTO", value: 98000, percentage: 20.09, count: 5, color: "secondary" },
+  { category: "REAL_ESTATE", value: 75000, percentage: 15.38, count: 2, color: "primary" },
+  { category: "PRIVATE_EQUITY", value: 50000, percentage: 10.25, count: 3, color: "warning" },
+  { category: "BONDS", value: 19650, percentage: 4.03, count: 4, color: "secondary" },
+]
+
+export const topPerformers = [
+  { name: "Tesla Inc.", symbol: "TSLA", type: "STOCK", value: 45000, returnPercent: 127.5 },
+  { name: "Bitcoin", symbol: "BTC", type: "CRYPTO", value: 52000, returnPercent: 85.3 },
+  { name: "Apple Inc.", symbol: "AAPL", type: "STOCK", value: 38500, returnPercent: 42.7 },
+  { name: "Nvidia Corp.", symbol: "NVDA", type: "STOCK", value: 41000, returnPercent: 38.2 },
+  { name: "Ethereum", symbol: "ETH", type: "CRYPTO", value: 28000, returnPercent: 35.8 },
+]
+
+export const businessHoldings = [
+  {
+    name: "TechStart Inc.",
+    industry: "Software",
+    ownership: 25,
+    valuation: 750000,
+    cost: 500000,
+    revenue: 1200000,
+    netIncome: 180000,
+    employees: 25,
+    status: "ACTIVE",
+  },
+  {
+    name: "CloudData Corp.",
+    industry: "Cloud Services",
+    ownership: 15,
+    valuation: 1200000,
+    cost: 800000,
+    revenue: 2500000,
+    netIncome: 350000,
+    employees: 45,
+    status: "ACTIVE",
+  },
+  {
+    name: "GreenEnergy LLC",
+    industry: "Renewable Energy",
+    ownership: 40,
+    valuation: 500000,
+    cost: 450000,
+    revenue: 800000,
+    netIncome: 95000,
+    employees: 18,
+    status: "ACTIVE",
+  },
+]
