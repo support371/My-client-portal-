@@ -3,10 +3,11 @@
 import { AuthGuard } from "@/components/auth-guard"
 import { PortalHeader } from "@/components/portal-header"
 import { GlassCard } from "@/components/glass-card"
+import { cn } from "@/lib/utils"
 import { StatCard } from "@/components/stat-card"
 import { StatusBadge } from "@/components/status-badge"
 import { tenants, logs } from "@/lib/data"
-import { Crown } from "lucide-react"
+import { Crown, ShieldCheck, Database, Server, Activity } from "lucide-react"
 
 export default function SuperAdminPage() {
   return (
@@ -75,13 +76,66 @@ export default function SuperAdminPage() {
           </div>
         </GlassCard>
 
+        <div className="mt-4 grid gap-4 md:grid-cols-2">
+          {/* Resource Allocation - NEW */}
+          <GlassCard>
+            <div className="mb-4 flex items-center justify-between">
+              <h3 className="text-base font-bold text-foreground">Resource Allocation</h3>
+              <Server className="h-4 w-4 text-primary" />
+            </div>
+            <div className="space-y-4">
+              {[
+                { label: "Compute (CPU)", value: "64%", color: "bg-primary" },
+                { label: "Memory (RAM)", value: "42%", color: "bg-secondary" },
+                { label: "Storage (SSD)", value: "88%", color: "bg-warning" },
+              ].map((r, i) => (
+                <div key={i}>
+                  <div className="mb-1 flex justify-between text-xs">
+                    <span className="text-muted">{r.label}</span>
+                    <span className="font-bold">{r.value}</span>
+                  </div>
+                  <div className="h-1.5 w-full rounded-full bg-border/30 overflow-hidden">
+                    <div className={cn("h-full", r.color)} style={{ width: r.value }} />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </GlassCard>
+
+          {/* Global Security Audit - NEW */}
+          <GlassCard>
+            <div className="mb-4 flex items-center justify-between">
+              <h3 className="text-base font-bold text-foreground">Global Security Audit</h3>
+              <ShieldCheck className="h-4 w-4 text-primary" />
+            </div>
+            <div className="space-y-3">
+              {[
+                { label: "Encryption", status: "Verified", icon: ShieldCheck, color: "text-primary" },
+                { label: "Firewall", status: "Active", icon: Activity, color: "text-secondary" },
+                { label: "Backups", status: "Healthy", icon: Database, color: "text-primary" },
+              ].map((s, i) => (
+                <div key={i} className="flex items-center justify-between rounded-lg border border-glass-border p-2.5">
+                  <div className="flex items-center gap-3">
+                    <s.icon className={cn("h-4 w-4", s.color)} />
+                    <span className="text-sm font-medium">{s.label}</span>
+                  </div>
+                  <span className={cn("text-[10px] font-bold uppercase", s.color)}>{s.status}</span>
+                </div>
+              ))}
+            </div>
+          </GlassCard>
+        </div>
+
         {/* Infrastructure Health */}
         <GlassCard hover={false} className="mt-4">
           <h3 className="mb-4 text-base font-bold text-foreground">Infrastructure Health</h3>
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-3 gap-3 md:grid-cols-6">
             <StatCard value="99.9%" label="Uptime" />
             <StatCard value={12} label="Active Nodes" />
-            <StatCard value="45ms" label="Avg Latency" />
+            <StatCard value="45ms" label="Latency" />
+            <StatCard value="2.4M" label="Requests" />
+            <StatCard value="0" label="Incidents" />
+            <StatCard value="100%" label="Health" />
           </div>
         </GlassCard>
       </main>

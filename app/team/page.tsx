@@ -5,8 +5,9 @@ import { AuthGuard } from "@/components/auth-guard"
 import { PortalHeader } from "@/components/portal-header"
 import { GlassCard } from "@/components/glass-card"
 import { StatCard } from "@/components/stat-card"
+import { cn } from "@/lib/utils"
 import { teams } from "@/lib/data"
-import { Users, Send } from "lucide-react"
+import { Users, Send, BarChart, Calendar, PieChart, Zap } from "lucide-react"
 
 type TerminalLine = { text: string; isResponse?: boolean }
 
@@ -57,6 +58,13 @@ export default function TeamPage() {
           </p>
         </div>
 
+        <div className="mt-6 grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-4">
+          <StatCard value={47} label="Total Members" />
+          <StatCard value="94%" label="Project Velocity" />
+          <StatCard value={8} label="Departments" />
+          <StatCard value="24/7" label="Support" />
+        </div>
+
         <div className="mt-6 grid gap-4 md:grid-cols-3">
           {/* Terminal */}
           <GlassCard className="md:col-span-2">
@@ -89,13 +97,79 @@ export default function TeamPage() {
             </div>
           </GlassCard>
 
-          {/* Quick Metrics */}
+          {/* Department Load - NEW */}
           <GlassCard>
-            <h3 className="mb-4 text-base font-bold text-foreground">Quick Metrics</h3>
-            <div className="space-y-3">
-              <StatCard value="94%" label="Project Completion" />
-              <StatCard value={47} label="Team Members" />
+            <div className="mb-4 flex items-center justify-between">
+              <h3 className="text-base font-bold text-foreground">Department Load</h3>
+              <PieChart className="h-4 w-4 text-secondary" />
             </div>
+            <div className="space-y-3">
+              {[
+                { label: "Engineering", load: 85, color: "bg-primary" },
+                { label: "Operations", load: 60, color: "bg-secondary" },
+                { label: "Intelligence", load: 92, color: "bg-warning" },
+              ].map((d, i) => (
+                <div key={i}>
+                  <div className="mb-1 flex justify-between text-[10px] uppercase tracking-wider text-muted font-bold">
+                    <span>{d.label}</span>
+                    <span>{d.load}%</span>
+                  </div>
+                  <div className="h-1 w-full rounded-full bg-border/20 overflow-hidden">
+                    <div className={cn("h-full", d.color)} style={{ width: `${d.load}%` }} />
+                  </div>
+                </div>
+              ))}
+            </div>
+            <button className="mt-5 w-full rounded-lg border border-glass-border py-2 text-[10px] font-bold uppercase tracking-widest text-primary transition-colors hover:bg-primary/10">
+              View Load Balancer
+            </button>
+          </GlassCard>
+        </div>
+
+        {/* Project Timeline - NEW */}
+        <div className="mt-4 grid gap-4 md:grid-cols-3">
+          <GlassCard className="md:col-span-2">
+            <div className="mb-4 flex items-center justify-between">
+              <h3 className="text-base font-bold text-foreground">Project Timeline</h3>
+              <Calendar className="h-4 w-4 text-primary" />
+            </div>
+            <div className="relative space-y-4 pl-4 before:absolute before:left-[7px] before:top-2 before:h-[calc(100%-16px)] before:w-px before:bg-glass-border">
+              {[
+                { date: "Feb 12", title: "Global Security Audit", status: "Upcoming", color: "bg-primary" },
+                { date: "Feb 10", title: "Infrastructure Migration", status: "In Progress", color: "bg-secondary" },
+                { date: "Feb 05", title: "Q1 Planning Session", status: "Completed", color: "bg-muted" },
+              ].map((item, i) => (
+                <div key={i} className="relative">
+                  <div className={cn("absolute -left-[13px] top-1.5 h-2 w-2 rounded-full border-2 border-background", item.color)} />
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <p className="text-[10px] font-bold text-muted uppercase">{item.date}</p>
+                      <h4 className="text-sm font-bold text-foreground">{item.title}</h4>
+                    </div>
+                    <span className={cn("rounded px-1.5 py-0.5 text-[9px] font-bold uppercase", item.color === "bg-muted" ? "bg-muted/20 text-muted" : "bg-primary/20 text-primary")}>
+                      {item.status}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </GlassCard>
+
+          <GlassCard>
+            <div className="mb-4 flex items-center justify-between">
+              <h3 className="text-base font-bold text-foreground">System Velocity</h3>
+              <Zap className="h-4 w-4 text-warning" />
+            </div>
+            <div className="flex flex-col items-center justify-center h-40">
+              <div className="relative flex h-32 w-32 items-center justify-center rounded-full border-4 border-glass-border">
+                <div className="absolute inset-0 rounded-full border-t-4 border-primary" style={{ transform: "rotate(240deg)" }} />
+                <div className="text-center">
+                  <p className="text-3xl font-black text-primary">94.2</p>
+                  <p className="text-[10px] font-bold uppercase text-muted">V-Score</p>
+                </div>
+              </div>
+            </div>
+            <p className="mt-4 text-center text-[10px] text-muted leading-relaxed">System performance is 8.4% above average for this quarter.</p>
           </GlassCard>
         </div>
 
