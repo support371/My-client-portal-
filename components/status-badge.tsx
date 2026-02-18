@@ -1,5 +1,4 @@
 import { cn } from "@/lib/utils"
-import { memo } from "react"
 
 const variants = {
   healthy: "bg-primary/20 text-primary",
@@ -10,7 +9,7 @@ const variants = {
   success: "bg-primary/20 text-primary",
 } as const
 
-export const StatusBadge = memo(function StatusBadge({
+export function StatusBadge({
   label,
   variant = "default",
 }: {
@@ -27,4 +26,4 @@ export const StatusBadge = memo(function StatusBadge({
       {label}
     </span>
   )
-})
+}

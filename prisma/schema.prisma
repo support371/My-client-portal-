@@ -1,0 +1,78 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  SUPERADMIN
+  ADMIN
+  TEAM
+  CLIENT
+  VIP
+}
+
+enum VipRequestStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  password      String
+  name          String
+  role          Role      @default(CLIENT)
+  kycApproved   Boolean   @default(false)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Relationships
+  vipRequests       VipUpgradeRequest[]
+  decidedVipRequests VipUpgradeRequest[] @relation("AdminDecisions")
+  holdings          Holding[]
+}
+
+model VipUpgradeRequest {
+  id              String           @id @default(cuid())
+  userId          String
+  user            User             @relation(fields: [userId], references: [id])
+  status          VipRequestStatus @default(PENDING)
+  message         String
+  createdAt       DateTime         @default(now())
+  decidedAt       DateTime?
+  decidedByUserId String?
+  decidedBy       User?            @relation("AdminDecisions", fields: [decidedByUserId], references: [id])
+
+  @@index([userId])
+  @@index([status])
+}
+
+model Holding {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  symbol    String
+  quantity  Decimal  @db.Decimal(18, 8)
+  avgCost   Decimal  @db.Decimal(18, 8)
+  currency  String   @default("USD")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([symbol])
+}
+
+model PricePoint {
+  id     String   @id @default(cuid())
+  symbol String
+  price  Decimal  @db.Decimal(18, 8)
+  asOf   DateTime @default(now())
+
+  @@unique([symbol, asOf])
+  @@index([symbol])
+}

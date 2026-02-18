@@ -1,16 +1,31 @@
 "use client"
 
-import {
-  createContext,
-  useContext,
-  useState,
-  useEffect,
-  useCallback,
-  useMemo,
-  useSyncExternalStore,
-  type ReactNode,
-} from "react"
+import { createContext, useContext, useState, useEffect, useCallback, useMemo, useSyncExternalStore, type ReactNode } from "react"
 import { USERS, type UserRole } from "./data"
+
+const listeners = new Set<() => void>()
+
+function subscribe(onStoreChange: () => void) {
+  listeners.add(onStoreChange)
+  window.addEventListener("storage", onStoreChange)
+  return () => {
+    listeners.delete(onStoreChange)
+    window.removeEventListener("storage", onStoreChange)
+  }
+}
+
+function notify() {
+  listeners.forEach((l) => l())
+}
+
+function getSnapshot() {
+  if (typeof window === "undefined") return null
+  return localStorage.getItem("gem_session")
+}
+
+function getServerSnapshot() {
+  return null
+}
 
 type Session = {
   email: string
@@ -29,50 +44,25 @@ type AuthContextType = {
 
 const AuthContext = createContext<AuthContextType | null>(null)
 
-const STORAGE_KEY = "gem_session"
-
-// ⚡ Bolt Optimization: Use useSyncExternalStore for robust, multi-tab session management.
-// This ensures cross-tab synchronization and provides a declarative way to sync with localStorage.
-// Impact: Improves session reliability and reduces redundant state updates by ~40%.
-const authStore = {
-  subscribe(callback: () => void) {
-    window.addEventListener("storage", callback)
-    window.addEventListener("auth-update", callback)
-    return () => {
-      window.removeEventListener("storage", callback)
-      window.removeEventListener("auth-update", callback)
-    }
-  },
-  getSnapshot() {
-    return localStorage.getItem(STORAGE_KEY)
-  },
-  getServerSnapshot() {
-    return null
-  },
-}
-
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const sessionRaw = useSyncExternalStore(
-    authStore.subscribe,
-    authStore.getSnapshot,
-    authStore.getServerSnapshot
-  )
+  const [isMounted, setIsMounted] = useState(false)
+
+  useEffect(() => {
+    setIsMounted(true)
+  }, [])
+
+  const sessionStr = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot)
 
   const session = useMemo(() => {
-    if (!sessionRaw) return null
+    if (!isMounted || !sessionStr) return null
     try {
-      return JSON.parse(sessionRaw) as Session
+      return JSON.parse(sessionStr) as Session
     } catch {
-      localStorage.removeItem(STORAGE_KEY)
       return null
     }
-  }, [sessionRaw])
+  }, [isMounted, sessionStr])
 
-  // Hydration safety: ensure client render matches server render initially
-  const [isHydrated, setIsHydrated] = useState(false)
-  useEffect(() => {
-    setIsHydrated(true)
-  }, [])
+  const isLoading = !isMounted
 
   const login = useCallback((email: string, password: string): boolean => {
     const user = USERS[email]
@@ -83,30 +73,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         name: user.name,
         loginTime: new Date().toISOString(),
       }
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(newSession))
-      window.dispatchEvent(new CustomEvent("auth-update"))
+      localStorage.setItem("gem_session", JSON.stringify(newSession))
+      notify()
       return true
     }
     return false
   }, [])
 
   const logout = useCallback(() => {
-    localStorage.removeItem(STORAGE_KEY)
-    window.dispatchEvent(new CustomEvent("auth-update"))
+    localStorage.removeItem("gem_session")
+    notify()
   }, [])
 
-  const value = useMemo(
-    () => ({
-      session,
-      login,
-      logout,
-      isAuthenticated: !!session,
-      isLoading: !isHydrated,
-    }),
-    [session, login, logout, isHydrated]
-  )
+  const isAuthenticated = !!session
 
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
+  return (
+    <AuthContext.Provider value={{ session, login, logout, isAuthenticated, isLoading }}>
+      {children}
+    </AuthContext.Provider>
+  )
 }
 
 export function useAuth() {
