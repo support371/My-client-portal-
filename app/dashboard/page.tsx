@@ -16,6 +16,9 @@ import {
   Shield,
 } from "lucide-react"
 
+// ⚡ Bolt Optimization: Move static icon out of render function.
+const DASHBOARD_ICON = <LayoutDashboard className="h-5 w-5 text-primary" />
+
 const portals = [
   {
     title: "SuperAdmin Dashboard",
@@ -59,7 +62,7 @@ export default function DashboardPage() {
 
   return (
     <AuthGuard>
-      <PortalHeader title="GEM & ATR Platform" icon={<LayoutDashboard className="h-5 w-5 text-primary" />} />
+      <PortalHeader title="GEM & ATR Platform" icon={DASHBOARD_ICON} />
 
       <main className="mx-auto max-w-5xl px-4 py-6 md:py-10">
         <div style={{ animation: "fadeIn 0.4s ease-out" }}>

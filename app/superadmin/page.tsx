@@ -8,12 +8,15 @@ import { StatusBadge } from "@/components/status-badge"
 import { tenants, logs } from "@/lib/data"
 import { Crown } from "lucide-react"
 
+// ⚡ Bolt Optimization: Move static icon out of render function.
+const SUPERADMIN_ICON = <Crown className="h-5 w-5 text-primary" />
+
 export default function SuperAdminPage() {
   return (
     <AuthGuard requiredRole="superadmin">
       <PortalHeader
         title="SuperAdmin Portal"
-        icon={<Crown className="h-5 w-5 text-primary" />}
+        icon={SUPERADMIN_ICON}
       />
 
       <main className="mx-auto max-w-5xl px-4 py-6 md:py-10">

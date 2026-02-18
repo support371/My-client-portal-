@@ -12,6 +12,9 @@ import { Users } from "lucide-react"
 
 const FILTER_BTNS: Array<"ALL" | "GEM" | "Alliance"> = ["ALL", "GEM", "Alliance"]
 
+// ⚡ Bolt Optimization: Move static icon out of render function.
+const TEAM_ICON = <Users className="h-5 w-5 text-primary" />
+
 export default function TeamPage() {
   const [filter, setFilter] = useState<"ALL" | "GEM" | "Alliance">("ALL")
 
@@ -25,7 +28,7 @@ export default function TeamPage() {
     <AuthGuard requiredRole="team">
       <PortalHeader
         title="Team Portal"
-        icon={<Users className="h-5 w-5 text-primary" />}
+        icon={TEAM_ICON}
       />
 
       <main className="mx-auto max-w-5xl px-4 py-6 md:py-10">
