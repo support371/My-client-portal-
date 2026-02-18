@@ -7,6 +7,9 @@ import { GlassCard } from "@/components/glass-card"
 import { transactions } from "@/lib/data"
 import { Briefcase, ArrowUpRight, ArrowDownRight } from "lucide-react"
 
+// ⚡ Bolt Optimization: Move static icon out of render function.
+const CLIENT_ICON = <Briefcase className="h-5 w-5 text-primary" />
+
 export default function ClientPage() {
   const { session } = useAuth()
 
@@ -14,7 +17,7 @@ export default function ClientPage() {
     <AuthGuard requiredRole="client">
       <PortalHeader
         title="Client Portal"
-        icon={<Briefcase className="h-5 w-5 text-primary" />}
+        icon={CLIENT_ICON}
       />
 
       <main className="mx-auto max-w-5xl px-4 py-6 md:py-10">

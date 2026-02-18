@@ -5,3 +5,7 @@
 ## 2026-02-17 - [State Colocation & Component Memoization]
 **Learning:** Even with `useMemo` for filtering logic, high-frequency state updates (like typing in a terminal) can cause the entire page to re-render, leading to performance degradation in sibling components. "Pushing state down" to the smallest possible component is often more effective than memoization alone.
 **Action:** Colocate high-frequency state within its own component. Wrap static or infrequently changing siblings (like large lists) in `React.memo` to ensure they skip the reconciliation process entirely during parent re-renders.
+
+## 2026-02-18 - [Hoisting JSX for Memoization Stability]
+**Learning:** Wrapping a component in `React.memo` is ineffective if it receives inline JSX as a prop (e.g., `icon={<Settings />}`), because JSX elements are new objects on every render. Hoisting these elements to constants outside the render function ensures stable references.
+**Action:** Hoist static JSX props (like icons or complex decorative elements) to module-level constants when the receiving component is memoized.

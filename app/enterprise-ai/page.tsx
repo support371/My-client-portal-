@@ -7,6 +7,9 @@ import { StatCard } from "@/components/stat-card"
 import { aiAgents, aiLogs } from "@/lib/data"
 import { Bot } from "lucide-react"
 
+// ⚡ Bolt Optimization: Move static icon out of render function.
+const AI_ICON = <Bot className="h-5 w-5 text-primary" />
+
 const colorMap = {
   primary: { bar: "bg-primary", text: "text-primary" },
   secondary: { bar: "bg-secondary", text: "text-secondary" },
@@ -18,7 +21,7 @@ export default function EnterpriseAIPage() {
     <AuthGuard>
       <PortalHeader
         title="AI Operations"
-        icon={<Bot className="h-5 w-5 text-primary" />}
+        icon={AI_ICON}
       />
 
       <main className="mx-auto max-w-5xl px-4 py-6 md:py-10">

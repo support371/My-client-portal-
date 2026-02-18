@@ -4,8 +4,15 @@ import Link from "next/link"
 import { useAuth } from "@/lib/auth-context"
 import { useRouter } from "next/navigation"
 import { LogOut, LayoutDashboard } from "lucide-react"
+import { memo } from "react"
 
-export function PortalHeader({
+/**
+ * ⚡ Bolt Optimization: PortalHeader Component
+ *
+ * Wrapped in React.memo to skip re-renders when parent pages update.
+ * Works effectively because icons and titles are now moved to static constants.
+ */
+export const PortalHeader = memo(function PortalHeader({
   title,
   icon,
 }: {
@@ -49,4 +56,4 @@ export function PortalHeader({
       </nav>
     </header>
   )
-}
+})
