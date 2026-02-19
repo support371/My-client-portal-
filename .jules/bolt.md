@@ -9,3 +9,7 @@
 ## 2026-02-18 - [Hoisting JSX for Memoization Stability]
 **Learning:** Wrapping a component in `React.memo` is ineffective if it receives inline JSX as a prop (e.g., `icon={<Settings />}`), because JSX elements are new objects on every render. Hoisting these elements to constants outside the render function ensures stable references.
 **Action:** Hoist static JSX props (like icons or complex decorative elements) to module-level constants when the receiving component is memoized.
+
+## 2026-02-20 - [Login Page Input Responsiveness]
+**Learning:** High-frequency state updates (typing in email/password) on a login page can cause static UI elements (like quick-access buttons) to re-render, leading to input lag on lower-end devices.
+**Action:** Move static button grids into memoized components and ensure their event handlers use `useCallback` with stable dependencies to maintain stable prop references.
