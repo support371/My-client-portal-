@@ -13,3 +13,7 @@
 ## 2026-02-20 - [Login Page Input Responsiveness]
 **Learning:** High-frequency state updates (typing in email/password) on a login page can cause static UI elements (like quick-access buttons) to re-render, leading to input lag on lower-end devices.
 **Action:** Move static button grids into memoized components and ensure their event handlers use `useCallback` with stable dependencies to maintain stable prop references.
+
+## 2026-02-21 - [Terminal Input & List Item Memoization]
+**Learning:** In components with high-frequency state updates (like typing in a terminal), mapping over even a small list of items (log lines) can cause cumulative UI latency as the list grows. React's reconciliation still runs the component function for every item in the list on every keystroke.
+**Action:** Extract list items into memoized sub-components (e.g., TerminalLineItem). This allows React to skip the function execution entirely if the item data hasn't changed, significantly reducing the work done on every keystroke and improving input responsiveness.
