@@ -13,3 +13,7 @@
 ## 2026-02-20 - [Login Page Input Responsiveness]
 **Learning:** High-frequency state updates (typing in email/password) on a login page can cause static UI elements (like quick-access buttons) to re-render, leading to input lag on lower-end devices.
 **Action:** Move static button grids into memoized components and ensure their event handlers use `useCallback` with stable dependencies to maintain stable prop references.
+
+## 2026-02-21 - [Foundation UI Optimization & CSS Transitions]
+**Learning:** Generic transition-all properties force the browser to monitor every animatable property, increasing style recalculation time. For foundational components like GlassCard used globally, this overhead scales linearly with page complexity.
+**Action:** Always prefer specific transition property targeting (e.g., transition-[transform,opacity]) for frequently used UI wrappers to maintain 60 FPS during interactions.
