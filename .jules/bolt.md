@@ -13,3 +13,7 @@
 ## 2026-02-20 - [Login Page Input Responsiveness]
 **Learning:** High-frequency state updates (typing in email/password) on a login page can cause static UI elements (like quick-access buttons) to re-render, leading to input lag on lower-end devices.
 **Action:** Move static button grids into memoized components and ensure their event handlers use `useCallback` with stable dependencies to maintain stable prop references.
+
+## 2026-02-24 - [Foundational CSS & Terminal List Optimization]
+**Learning:** Applying `React.memo` to foundational components that primarily render `children` (like `GlassCard`) is an anti-pattern; the constant recreation of JSX children causes comparison failures, adding overhead without benefit. However, CSS transition narrowing (replacing `transition-all` with specific properties) remains a high-impact foundational optimization.
+**Action:** Use specific CSS transition properties for foundational components. Reserve `React.memo` for components with stable or easily-memoizable props, and extract high-frequency list items (like terminal log lines) into their own memoized components to prevent redundant re-renders.
