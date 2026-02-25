@@ -6,6 +6,18 @@ import { Send } from "lucide-react"
 
 type TerminalLine = { text: string; isResponse?: boolean }
 
+/**
+ * ⚡ Bolt Optimization: Memoized Terminal Line Item
+ *
+ * Extracted into its own memoized component to ensure that typing in the
+ * terminal input doesn't cause every single line in the history to re-render.
+ */
+const TerminalLineItem = memo(({ text, isResponse }: TerminalLine) => (
+  <div className={isResponse ? "text-secondary" : "text-primary"}>
+    {text}
+  </div>
+))
+
 // ⚡ Bolt Optimization: Localize terminal state and wrap in memo.
 // This prevents typing in the terminal from re-rendering the entire TeamPage,
 // and prevents TeamPage filter changes from re-rendering the terminal.
@@ -43,9 +55,7 @@ export const TeamTerminal = memo(function TeamTerminal() {
         className="h-52 overflow-y-auto rounded-lg border border-border/50 bg-[#000] p-3 font-mono text-sm md:h-64"
       >
         {terminalLines.map((line, i) => (
-          <div key={i} className={line.isResponse ? "text-secondary" : "text-primary"}>
-            {line.text}
-          </div>
+          <TerminalLineItem key={i} {...line} />
         ))}
       </div>
       <div className="mt-3 flex gap-2">
