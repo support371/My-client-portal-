@@ -1,17 +1,18 @@
 "use client"
 
 import { cn } from "@/lib/utils"
-import { memo, type ReactNode } from "react"
+import { type ReactNode } from "react"
 
 /**
  * ⚡ Bolt Optimization: GlassCard
  *
- * 1. Wrapped in React.memo to prevent unnecessary re-renders when parent state changes
- *    but props remain stable.
- * 2. Replaced 'transition-all' with targeted transitions for 'transform', 'border-color',
- *    and 'box-shadow' to optimize browser style recalculations and reduce GPU overhead.
+ * 1. Optimizes browser style recalculations by using targeted transitions for
+ *    'transform', 'border-color', and 'box-shadow' instead of 'transition-all'.
+ * 2. Removed 'React.memo' (originally added as a micro-optimization) because this
+ *    foundational wrapper primarily receives dynamic 'children' (inline JSX),
+ *    making the shallow comparison overhead inefficient as it almost always fails.
  */
-export const GlassCard = memo(function GlassCard({
+export function GlassCard({
   children,
   className,
   hover = true,
@@ -31,4 +32,4 @@ export const GlassCard = memo(function GlassCard({
       {children}
     </div>
   )
-})
+}
