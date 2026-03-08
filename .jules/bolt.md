@@ -21,3 +21,7 @@
 ## 2026-02-27 - [GPU-Accelerated Animations & List Memoization]
 **Learning:** Animating properties like `box-shadow` triggers expensive paint cycles on every frame, which can lag the UI when multiple elements are animating simultaneously. Refactoring these to use `opacity` and `transform` on pseudo-elements offloads the work to the GPU compositor. Additionally, extracting list items into memoized components with stable keys is essential for maintaining performance in data-heavy dashboards.
 **Action:** Use `opacity` and `transform` for high-frequency animations. Always extract and memoize list items in dashboard views to prevent unnecessary re-renders.
+
+## 2026-03-08 - [Environment Blockers & Verification]
+**Learning:** In certain sandbox environments, symlinked `node_modules` prevent `npx` or `pnpm` from creating directories, breaking standard `next build` or `pnpm install` workflows. Additionally, ESLint v9 migration without a flat config file (`eslint.config.js`) will cause `pnpm lint` to fail even if the code is valid.
+**Action:** Rely on manual code inspection and successful "dry runs" when environment binaries are inaccessible or blocked by filesystem restrictions. Always clean up temporary log files (e.g., `next_dev.log`) before submission to avoid PR rejection.
