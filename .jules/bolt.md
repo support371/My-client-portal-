@@ -21,3 +21,7 @@
 ## 2026-02-27 - [GPU-Accelerated Animations & List Memoization]
 **Learning:** Animating properties like `box-shadow` triggers expensive paint cycles on every frame, which can lag the UI when multiple elements are animating simultaneously. Refactoring these to use `opacity` and `transform` on pseudo-elements offloads the work to the GPU compositor. Additionally, extracting list items into memoized components with stable keys is essential for maintaining performance in data-heavy dashboards.
 **Action:** Use `opacity` and `transform` for high-frequency animations. Always extract and memoize list items in dashboard views to prevent unnecessary re-renders.
+
+## 2026-03-01 - [Optimized Search Filtering & Item Memoization]
+**Learning:** In components with high-frequency state updates (like search inputs), performing expensive operations like `.toLowerCase()` inside a `.filter()` loop leads to redundant CPU cycles ($O(n)$ string operations). Pre-calculating the search term and extracting list items into memoized components significantly reduces both computation time and the React reconciliation workload.
+**Action:** Always pre-calculate search terms outside of filter loops and extract/memoize list items in high-frequency update zones.
