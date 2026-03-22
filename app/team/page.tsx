@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useMemo } from "react"
+import { useState, useMemo, memo } from "react"
 import { AuthGuard } from "@/components/auth-guard"
 import { PortalHeader } from "@/components/portal-header"
 import { GlassCard } from "@/components/glass-card"
@@ -15,15 +15,50 @@ const FILTER_BTNS: Array<"ALL" | "GEM" | "Alliance"> = ["ALL", "GEM", "Alliance"
 // ⚡ Bolt Optimization: Move static icon out of render function.
 const TEAM_ICON = <Users className="h-5 w-5 text-primary" />
 
-export default function TeamPage() {
+/**
+ * ⚡ Bolt Optimization: PersonnelWorkspace Component
+ *
+ * This component colocates the 'filter' state and its associated 'useMemo' logic.
+ * By moving this state out of the parent TeamPage, we ensure that changes to the
+ * personnel filter do not cause the expensive TeamTerminal component to re-render.
+ *
+ * Additionally, wrapping this in React.memo ensures that it skips reconciliation
+ * when the parent TeamPage re-renders (e.g., due to unrelated state changes).
+ */
+const PersonnelWorkspace = memo(function PersonnelWorkspace() {
   const [filter, setFilter] = useState<"ALL" | "GEM" | "Alliance">("ALL")
 
   // ⚡ Bolt Optimization: Memoize filtered list to prevent unnecessary re-calculations.
-  // This is critical because typing in the terminal otherwise triggers a re-filter of the personnel list.
   const filtered = useMemo(() => {
     return filter === "ALL" ? teams : teams.filter((m) => m.team === filter)
   }, [filter])
 
+  return (
+    <GlassCard className="mt-4">
+      <div className="mb-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+        <h3 className="text-base font-bold text-foreground">Personnel Directory</h3>
+        <div className="flex gap-2">
+          {FILTER_BTNS.map((f) => (
+            <button
+              key={f}
+              onClick={() => setFilter(f)}
+              className={`rounded-lg px-3 py-1.5 text-xs font-bold transition-colors ${
+                filter === f
+                  ? "bg-primary text-primary-foreground"
+                  : "border border-glass-border text-primary hover:bg-primary/10"
+              }`}
+            >
+              {f}
+            </button>
+          ))}
+        </div>
+      </div>
+      <PersonnelDirectory members={filtered} />
+    </GlassCard>
+  )
+})
+
+export default function TeamPage() {
   return (
     <AuthGuard requiredRole="team">
       <PortalHeader
@@ -55,28 +90,8 @@ export default function TeamPage() {
           </GlassCard>
         </div>
 
-        {/* Personnel Directory - Memoized to prevent re-renders when interacting with terminal */}
-        <GlassCard className="mt-4">
-          <div className="mb-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-            <h3 className="text-base font-bold text-foreground">Personnel Directory</h3>
-            <div className="flex gap-2">
-              {FILTER_BTNS.map((f) => (
-                <button
-                  key={f}
-                  onClick={() => setFilter(f)}
-                  className={`rounded-lg px-3 py-1.5 text-xs font-bold transition-colors ${
-                    filter === f
-                      ? "bg-primary text-primary-foreground"
-                      : "border border-glass-border text-primary hover:bg-primary/10"
-                  }`}
-                >
-                  {f}
-                </button>
-              ))}
-            </div>
-          </div>
-          <PersonnelDirectory members={filtered} />
-        </GlassCard>
+        {/* Personnel Workspace - State colocated and memoized */}
+        <PersonnelWorkspace />
       </main>
     </AuthGuard>
   )
