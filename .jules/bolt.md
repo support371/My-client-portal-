@@ -25,3 +25,7 @@
 ## 2026-03-21 - [State Colocation for Directory Isolation]
 **Learning:** While `useMemo` prevents redundant O(n) calculations, the component containing the `useMemo` still re-renders when parent state changes. Pushing the filtering state and logic down into a dedicated memoized component ensures that high-frequency sibling updates (like terminal typing) never trigger the directory's render cycle at all.
 **Action:** Colocate list-filtering state and logic into a dedicated component when that list is displayed alongside high-frequency input components.
+
+## 2026-03-23 - [Build Artifact Hygiene in Next.js]
+**Learning:** Running 'next build' or other build tools in the sandbox can generate hidden '.next' or cache directories. These artifacts can contain sensitive info like encryption keys and telemetry, leading to security risks and PR rejections.
+**Action:** Always verify the working directory for new artifacts like '.next' after running build commands and explicitly remove them before requesting reviews or submitting.
