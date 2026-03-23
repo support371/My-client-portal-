@@ -6,6 +6,10 @@ import { useRouter } from "next/navigation"
 import { LogOut, LayoutDashboard } from "lucide-react"
 import { memo } from "react"
 
+// ⚡ Bolt Optimization: Hoist static icons to constants to ensure stable references.
+const DASHBOARD_NAV_ICON = <LayoutDashboard className="h-4 w-4" />
+const LOGOUT_NAV_ICON = <LogOut className="h-4 w-4" />
+
 /**
  * ⚡ Bolt Optimization: PortalHeader Component
  *
@@ -43,14 +47,14 @@ export const PortalHeader = memo(function PortalHeader({
           href="/dashboard"
           className="flex items-center gap-1.5 text-sm text-muted transition-colors hover:text-primary"
         >
-          <LayoutDashboard className="h-4 w-4" />
+          {DASHBOARD_NAV_ICON}
           <span className="hidden md:inline">Dashboard</span>
         </Link>
         <button
           onClick={handleLogout}
           className="flex items-center gap-1.5 text-sm text-muted transition-colors hover:text-destructive"
         >
-          <LogOut className="h-4 w-4" />
+          {LOGOUT_NAV_ICON}
           <span className="hidden md:inline">Logout</span>
         </button>
       </nav>
