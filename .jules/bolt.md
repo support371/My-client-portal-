@@ -25,3 +25,7 @@
 ## 2026-03-21 - [State Colocation for Directory Isolation]
 **Learning:** While `useMemo` prevents redundant O(n) calculations, the component containing the `useMemo` still re-renders when parent state changes. Pushing the filtering state and logic down into a dedicated memoized component ensures that high-frequency sibling updates (like terminal typing) never trigger the directory's render cycle at all.
 **Action:** Colocate list-filtering state and logic into a dedicated component when that list is displayed alongside high-frequency input components.
+
+## 2026-03-24 - [Build Artifact Prevention]
+**Learning:** Committing environment-specific build artifacts like the `.next` directory or log files (e.g., `dev_server.log`) causes significant repository bloat and leads to immediate PR rejection due to the inclusion of transient, binary, and non-source files.
+**Action:** Always verify that no generated artifacts or logs are staged before submission. Ensure the `.gitignore` is respected and perform a final manual check of the changed file list.
