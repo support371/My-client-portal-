@@ -25,3 +25,7 @@
 ## 2026-03-21 - [State Colocation for Directory Isolation]
 **Learning:** While `useMemo` prevents redundant O(n) calculations, the component containing the `useMemo` still re-renders when parent state changes. Pushing the filtering state and logic down into a dedicated memoized component ensures that high-frequency sibling updates (like terminal typing) never trigger the directory's render cycle at all.
 **Action:** Colocate list-filtering state and logic into a dedicated component when that list is displayed alongside high-frequency input components.
+
+## 2026-03-26 - [Variable Font Optimization]
+**Learning:** Hardcoded font families in CSS can lead to layout shifts (CLS) and redundant network requests if the browser downloads multiple weights or styles that aren't perfectly matched to the application's needs. Using Next.js `next/font/google` with the `variable` property allows for seamless integration with Tailwind and ensures that the browser only loads exactly what's needed, with automatic fallback matching.
+**Action:** Always use variable fonts in Next.js layouts and bridge them to CSS via CSS variables for optimal LCP and zero CLS.
