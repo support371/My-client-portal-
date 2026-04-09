@@ -29,3 +29,7 @@
 ## 2026-03-27 - [Build Artifact Hygiene & Security]
 **Learning:** Running build commands like `next build` in the sandbox generates a `.next` directory containing sensitive metadata (e.g., encryption keys) and massive binary caches. If not manually cleaned before submission or review, these can be accidentally included, causing security risks and repository bloat.
 **Action:** Always run a cleanup command (e.g., `rm -rf .next *.log`) before requesting code reviews or calling the submit tool to ensure only source changes are evaluated.
+
+## 2026-03-28 - [O(N) Count Aggregation & Row Memoization]
+**Learning:** For data tables with status-based filtering and count badges, redundant (S \times N)$ filtering to compute counts (where S is statuses and N is items) adds unnecessary overhead on every keystroke. Combining a single-pass (N)$ aggregation with row-level memoization provides the best performance for high-frequency search/filter UI.
+**Action:** Use a single-pass loop inside `useMemo` to compute all category counts at once, and always extract table rows into memoized components to isolate search-driven re-renders.
