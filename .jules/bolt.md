@@ -29,3 +29,7 @@
 ## 2026-03-27 - [Build Artifact Hygiene & Security]
 **Learning:** Running build commands like `next build` in the sandbox generates a `.next` directory containing sensitive metadata (e.g., encryption keys) and massive binary caches. If not manually cleaned before submission or review, these can be accidentally included, causing security risks and repository bloat.
 **Action:** Always run a cleanup command (e.g., `rm -rf .next *.log`) before requesting code reviews or calling the submit tool to ensure only source changes are evaluated.
+
+## 2026-03-28 - [Effective List Memoization with Derived Props]
+**Learning:** Wrapping list items in `React.memo` is ineffective if they receive a global 'active ID' prop (e.g., `actionId`), because every row will re-render when that ID changes.
+**Action:** Pass a derived boolean (e.g., `isActive={activeId === item.id}`) to memoized list items to isolate re-renders to only the affected item.
