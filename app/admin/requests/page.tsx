@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useTransition, useMemo, memo } from "react"
+import { useState, useEffect, useTransition, useMemo, memo, useCallback } from "react"
 import { useAuth } from "@/lib/auth-context"
 import { AuthGuard } from "@/components/auth-guard"
 import { PortalHeader } from "@/components/portal-header"
@@ -93,15 +93,19 @@ export default function AdminRequestsPage() {
   const [loadError, setLoadError] = useState("")
   const [isPending, startTransition] = useTransition()
 
-  const reload = () => {
+  // ⚡ Bolt Optimization: Memoize reload to prevent recreation of dependent handlers.
+  const reload = useCallback(() => {
     getRequestsAction()
       .then(setRequests)
       .catch(() => setLoadError("Failed to load requests."))
-  }
+  }, [])
 
-  useEffect(reload, [])
+  useEffect(() => {
+    reload()
+  }, [reload])
 
-  const handleStatusChange = (requestId: string, status: string) => {
+  // ⚡ Bolt Optimization: Use useCallback for handlers passed to memoized children.
+  const handleStatusChange = useCallback((requestId: string, status: string) => {
     if (!session?.email) return
     setActionId(requestId)
     startTransition(async () => {
@@ -109,12 +113,12 @@ export default function AdminRequestsPage() {
       reload()
       setActionId(null)
     })
-  }
+  }, [session?.email, reload])
 
-  // ⚡ Bolt Optimization: Memoize filtering and count calculations.
-  // We perform a single O(N) pass to calculate both the filtered list and the status counts.
-  const { filtered, counts } = useMemo(() => {
-    const q = search.toLowerCase().trim()
+  // ⚡ Bolt Optimization: Memoize counts separately from filtering.
+  // This ensures that typing in the search box (which updates 'filtered')
+  // does not re-calculate counts (which only depends on 'requests').
+  const counts = useMemo(() => {
     const countsMap = {
       All: 0,
       Pending: 0,
@@ -123,13 +127,21 @@ export default function AdminRequestsPage() {
       Rejected: 0,
     }
 
-    const filteredList = requests.filter((r) => {
-      // Update counts while we're already iterating (O(N) instead of O(N*S))
+    requests.forEach((r) => {
       countsMap.All++
       if (r.status in countsMap) {
         countsMap[r.status as keyof typeof countsMap]++
       }
+    })
 
+    return countsMap as Record<FilterStatus, number>
+  }, [requests])
+
+  // ⚡ Bolt Optimization: Memoize the filtered list independently.
+  const filtered = useMemo(() => {
+    const q = search.toLowerCase().trim()
+
+    return requests.filter((r) => {
       const matchSearch = !q ||
         r.client.name.toLowerCase().includes(q) ||
         r.subject.toLowerCase().includes(q) ||
@@ -138,8 +150,6 @@ export default function AdminRequestsPage() {
 
       return matchSearch && matchFilter
     })
-
-    return { filtered: filteredList, counts: countsMap as Record<FilterStatus, number> }
   }, [requests, search, filter])
 
   return (
