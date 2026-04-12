@@ -29,3 +29,7 @@
 ## 2026-03-27 - [Build Artifact Hygiene & Security]
 **Learning:** Running build commands like `next build` in the sandbox generates a `.next` directory containing sensitive metadata (e.g., encryption keys) and massive binary caches. If not manually cleaned before submission or review, these can be accidentally included, causing security risks and repository bloat.
 **Action:** Always run a cleanup command (e.g., `rm -rf .next *.log`) before requesting code reviews or calling the submit tool to ensure only source changes are evaluated.
+
+## 2026-03-28 - [Memoization Stability & Algorithmic Efficiency]
+**Learning:** Wrapping a component in `React.memo` is ineffective if it receives callback props that are recreated on every render. Additionally, computing multiple status counts using repeated `.filter()` calls on the same array results in O(N * M) complexity, which can be optimized to O(N) with a single pass inside `useMemo`.
+**Action:** Always wrap event handlers in `useCallback` when passed to memoized components. Use a single `.forEach()` pass inside `useMemo` to compute multiple aggregate statistics from a single data array.
