@@ -35,22 +35,8 @@ export function AuthGuard({
     }
   }, [isLoading, isAuthenticated, session, requiredRole, router])
 
-  if (isLoading) {
+  if (isLoading || !isAuthenticated || (requiredRole && session?.role !== requiredRole && session?.role !== "superadmin")) {
     return LOADER_ICON
-  if (isLoading || !isAuthenticated) {
-    return (
-      <div className="flex min-h-dvh items-center justify-center bg-background">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    )
-  }
-
-  if (requiredRole && session?.role !== requiredRole && session?.role !== "superadmin") {
-    return (
-      <div className="flex min-h-dvh items-center justify-center bg-background">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    )
   }
 
   return <>{children}</>
