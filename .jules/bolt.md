@@ -29,3 +29,7 @@
 ## 2026-03-27 - [Build Artifact Hygiene & Security]
 **Learning:** Running build commands like `next build` in the sandbox generates a `.next` directory containing sensitive metadata (e.g., encryption keys) and massive binary caches. If not manually cleaned before submission or review, these can be accidentally included, causing security risks and repository bloat.
 **Action:** Always run a cleanup command (e.g., `rm -rf .next *.log`) before requesting code reviews or calling the submit tool to ensure only source changes are evaluated.
+
+## 2026-03-28 - [Admin Request Management Optimization]
+**Learning:** Combining algorithmic optimization (single-pass O(N) counts) with React rendering optimizations (hoisted constants and memoized row components) ensures that data-heavy administrative tables remain responsive even as the dataset grows and status transitions occur.
+**Action:** Use a single-pass loop for multi-category counting and always extract/memoize list items in searchable tables to isolate re-renders.

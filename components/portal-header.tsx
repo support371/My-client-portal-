@@ -34,8 +34,6 @@ export const PortalHeader = memo(function PortalHeader({
     logout()
     router.push("/login")
   }, [logout, router])
-    router.push("/")
-  }
 
   return (
     <header className="sticky top-0 z-50 flex items-center justify-between border-b border-glass-border bg-background/95 px-4 py-3 backdrop-blur-sm md:px-6">
