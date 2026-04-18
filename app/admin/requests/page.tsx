@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useTransition } from "react"
+import { useState, useEffect, useTransition, useMemo, useCallback, memo } from "react"
 import { useAuth } from "@/lib/auth-context"
 import { AuthGuard } from "@/components/auth-guard"
 import { PortalHeader } from "@/components/portal-header"
@@ -13,6 +13,9 @@ import {
 } from "@/lib/actions/requests"
 import { ClipboardList, ArrowLeft, Search, Loader2 } from "lucide-react"
 import Link from "next/link"
+
+// ⚡ Bolt Optimization: Hoist static icon for stable reference in memoized PortalHeader.
+const REQUESTS_ICON = <ClipboardList className="h-5 w-5 text-primary" />
 
 const statusVariant: Record<string, "default" | "success" | "warning" | "critical" | "info"> = {
   Pending:    "warning",
@@ -28,6 +31,57 @@ const priorityVariant: Record<string, "default" | "warning" | "critical"> = {
 const ALL_STATUSES = ["All", "Pending", "In Review", "Approved", "Rejected"] as const
 type FilterStatus = typeof ALL_STATUSES[number]
 
+/**
+ * ⚡ Bolt Optimization: Memoized request row component.
+ * Isolates re-renders to only the row being processed.
+ */
+const RequestRowComponent = memo(function RequestRowComponent({
+  req,
+  onStatusChange,
+  isProcessing
+}: {
+  req: RequestRow
+  onStatusChange: (requestId: string, status: string) => void
+  isProcessing: boolean
+}) {
+  return (
+    <tr className="border-b border-border/50 hover:bg-surface/50">
+      <td className="py-3 pr-4 font-medium text-foreground">{req.client.name}</td>
+      <td className="py-3 pr-4 text-muted">{req.type}</td>
+      <td className="max-w-[180px] truncate py-3 pr-4 text-foreground">{req.subject}</td>
+      <td className="py-3 pr-4">
+        <StatusBadge label={req.priority} variant={priorityVariant[req.priority] ?? "default"} />
+      </td>
+      <td className="py-3 pr-4">
+        <StatusBadge label={req.status} variant={statusVariant[req.status] ?? "default"} />
+      </td>
+      <td className="py-3 pr-4 text-muted">{new Date(req.createdAt).toLocaleDateString()}</td>
+      <td className="py-3">
+        <div className="flex gap-1.5">
+          {req.status !== "Approved" && (
+            <button
+              disabled={isProcessing}
+              onClick={() => onStatusChange(req.id, "Approved")}
+              className="rounded px-2 py-1 text-xs font-bold text-primary border border-glass-border hover:bg-primary/10 disabled:opacity-50"
+            >
+              {isProcessing ? <Loader2 className="h-3 w-3 animate-spin" /> : "Approve"}
+            </button>
+          )}
+          {req.status !== "Rejected" && (
+            <button
+              disabled={isProcessing}
+              onClick={() => onStatusChange(req.id, "Rejected")}
+              className="rounded px-2 py-1 text-xs font-bold text-destructive border border-glass-border hover:bg-destructive/10 disabled:opacity-50"
+            >
+              Reject
+            </button>
+          )}
+        </div>
+      </td>
+    </tr>
+  )
+})
+
 export default function AdminRequestsPage() {
   const { session } = useAuth()
   const [requests, setRequests] = useState<RequestRow[]>([])
@@ -37,44 +91,63 @@ export default function AdminRequestsPage() {
   const [loadError, setLoadError] = useState("")
   const [isPending, startTransition] = useTransition()
 
-  const reload = () => {
+  // ⚡ Bolt Optimization: Memoize reload function for stable reference.
+  const reload = useCallback(() => {
     getRequestsAction()
       .then(setRequests)
       .catch(() => setLoadError("Failed to load requests."))
-  }
+  }, [])
 
-  useEffect(reload, [])
+  useEffect(reload, [reload])
 
-  const handleStatusChange = (requestId: string, status: string) => {
+  // ⚡ Bolt Optimization: Memoize status change handler.
+  const handleStatusChange = useCallback((requestId: string, status: string) => {
     if (!session?.email) return
     setActionId(requestId)
     startTransition(async () => {
-      await updateRequestStatusAction({ requestId, status, adminEmail: session.email })
+      await updateRequestStatusAction({ requestId, status, adminEmail: session.email! })
       reload()
       setActionId(null)
     })
-  }
+  }, [session?.email, reload])
 
-  const filtered = requests.filter((r) => {
+  // ⚡ Bolt Optimization: Memoize filtering logic with O(N) complexity.
+  const filtered = useMemo(() => {
     const q = search.toLowerCase()
-    const matchSearch =
-      r.client.name.toLowerCase().includes(q) ||
-      r.subject.toLowerCase().includes(q) ||
-      r.id.toLowerCase().includes(q)
-    const matchFilter = filter === "All" || r.status === filter
-    return matchSearch && matchFilter
-  })
+    return requests.filter((r) => {
+      const matchSearch =
+        r.client.name.toLowerCase().includes(q) ||
+        r.subject.toLowerCase().includes(q) ||
+        r.id.toLowerCase().includes(q)
+      const matchFilter = filter === "All" || r.status === filter
+      return matchSearch && matchFilter
+    })
+  }, [requests, search, filter])
 
-  const counts = ALL_STATUSES.reduce((acc, s) => ({
-    ...acc,
-    [s]: s === "All" ? requests.length : requests.filter((r) => r.status === s).length,
-  }), {} as Record<FilterStatus, number>)
+  // ⚡ Bolt Optimization: Optimize counts calculation to O(N) with a single pass.
+  const counts = useMemo(() => {
+    const initialCounts: Record<FilterStatus, number> = {
+      All: 0,
+      Pending: 0,
+      "In Review": 0,
+      Approved: 0,
+      Rejected: 0
+    }
+
+    return requests.reduce((acc, req) => {
+      acc.All++
+      if (req.status in acc) {
+        acc[req.status as FilterStatus]++
+      }
+      return acc
+    }, initialCounts)
+  }, [requests])
 
   return (
     <AuthGuard requiredRole="admin">
       <PortalHeader
         title="Request Management"
-        icon={<ClipboardList className="h-5 w-5 text-primary" />}
+        icon={REQUESTS_ICON}
       />
 
       <main className="mx-auto max-w-5xl px-4 py-6 md:py-10">
@@ -142,40 +215,12 @@ export default function AdminRequestsPage() {
                       <td colSpan={7} className="py-8 text-center text-sm text-muted">No requests match your filters.</td>
                     </tr>
                   ) : filtered.map((req) => (
-                    <tr key={req.id} className="border-b border-border/50 hover:bg-surface/50">
-                      <td className="py-3 pr-4 font-medium text-foreground">{req.client.name}</td>
-                      <td className="py-3 pr-4 text-muted">{req.type}</td>
-                      <td className="max-w-[180px] truncate py-3 pr-4 text-foreground">{req.subject}</td>
-                      <td className="py-3 pr-4">
-                        <StatusBadge label={req.priority} variant={priorityVariant[req.priority] ?? "default"} />
-                      </td>
-                      <td className="py-3 pr-4">
-                        <StatusBadge label={req.status} variant={statusVariant[req.status] ?? "default"} />
-                      </td>
-                      <td className="py-3 pr-4 text-muted">{new Date(req.createdAt).toLocaleDateString()}</td>
-                      <td className="py-3">
-                        <div className="flex gap-1.5">
-                          {req.status !== "Approved" && (
-                            <button
-                              disabled={isPending && actionId === req.id}
-                              onClick={() => handleStatusChange(req.id, "Approved")}
-                              className="rounded px-2 py-1 text-xs font-bold text-primary border border-glass-border hover:bg-primary/10 disabled:opacity-50"
-                            >
-                              {isPending && actionId === req.id ? <Loader2 className="h-3 w-3 animate-spin" /> : "Approve"}
-                            </button>
-                          )}
-                          {req.status !== "Rejected" && (
-                            <button
-                              disabled={isPending && actionId === req.id}
-                              onClick={() => handleStatusChange(req.id, "Rejected")}
-                              className="rounded px-2 py-1 text-xs font-bold text-destructive border border-glass-border hover:bg-destructive/10 disabled:opacity-50"
-                            >
-                              Reject
-                            </button>
-                          )}
-                        </div>
-                      </td>
-                    </tr>
+                    <RequestRowComponent
+                      key={req.id}
+                      req={req}
+                      onStatusChange={handleStatusChange}
+                      isProcessing={isPending && actionId === req.id}
+                    />
                   ))}
                 </tbody>
               </table>
