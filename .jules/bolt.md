@@ -29,3 +29,7 @@
 ## 2026-03-27 - [Build Artifact Hygiene & Security]
 **Learning:** Running build commands like `next build` in the sandbox generates a `.next` directory containing sensitive metadata (e.g., encryption keys) and massive binary caches. If not manually cleaned before submission or review, these can be accidentally included, causing security risks and repository bloat.
 **Action:** Always run a cleanup command (e.g., `rm -rf .next *.log`) before requesting code reviews or calling the submit tool to ensure only source changes are evaluated.
+
+## 2026-03-28 - [Scope Management & PR Hygiene]
+**Learning:** Combining critical bug fixes (syntax errors) with multiple performance optimizations in a single PR can lead to scope creep and make reviews difficult. Additionally, ensure binary artifacts like `__pycache__` are never included in the submission.
+**Action:** Prioritize stability fixes first if the app is broken, then focus on exactly one performance win as per persona instructions. Always verify the file list before submitting to exclude artifacts.
