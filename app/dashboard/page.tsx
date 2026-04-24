@@ -114,28 +114,11 @@ export default function DashboardPage() {
         </div>
 
         <div className="mt-8 grid gap-4 md:grid-cols-2">
+          {/* ⚡ Bolt Optimization: Render only the memoized PortalCard.
+              Removed a duplicate un-memoized GlassCard block that was causing
+              redundant renders and invalid JSX. */}
           {portals.map((portal, i) => (
             <PortalCard key={portal.href} portal={portal} index={i} />
-            <GlassCard key={portal.href} className="flex flex-col">
-              <div style={{ animation: `fadeIn ${0.3 + i * 0.08}s ease-out` }}>
-                <div className="mb-3 flex items-center gap-2.5">
-                  <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10">
-                    <portal.icon className="h-5 w-5 text-primary" />
-                  </div>
-                  <span className="rounded-md bg-primary/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-primary">
-                    {portal.badge}
-                  </span>
-                </div>
-                <h3 className="text-base font-bold text-foreground">{portal.title}</h3>
-                <p className="mt-1 text-sm leading-relaxed text-muted">{portal.description}</p>
-                <Link
-                  href={portal.href}
-                  className="mt-4 inline-flex h-10 items-center justify-center rounded-lg bg-gradient-to-r from-primary to-secondary px-5 text-sm font-bold text-primary-foreground transition-transform hover:scale-[1.02] active:scale-[0.98]"
-                >
-                  {"Access Portal"}
-                </Link>
-              </div>
-            </GlassCard>
           ))}
         </div>
 
