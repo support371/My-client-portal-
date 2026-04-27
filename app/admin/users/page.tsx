@@ -9,6 +9,9 @@ import { getUsersAction, type UserRow } from "@/lib/actions/users"
 import { Users, ArrowLeft, Search, ShieldCheck } from "lucide-react"
 import Link from "next/link"
 
+// ⚡ Bolt Optimization: Hoist static icons to constants for stable references.
+const USERS_ICON = <Users className="h-5 w-5 text-primary" />
+
 const roleVariant: Record<string, "default" | "success" | "warning" | "critical" | "info"> = {
   superadmin: "critical",
   admin:      "warning",
@@ -40,7 +43,7 @@ export default function AdminUsersPage() {
     <AuthGuard requiredRole="admin">
       <PortalHeader
         title="User Management"
-        icon={<Users className="h-5 w-5 text-primary" />}
+        icon={USERS_ICON}
       />
 
       <main className="mx-auto max-w-5xl px-4 py-6 md:py-10">

@@ -10,6 +10,9 @@ import { createRequestAction, getMyRequestsAction, type RequestRow } from "@/lib
 import { FileText, ArrowLeft, Loader2 } from "lucide-react"
 import Link from "next/link"
 
+// ⚡ Bolt Optimization: Hoist static icons to constants for stable references.
+const REQUESTS_ICON = <FileText className="h-5 w-5 text-primary" />
+
 const statusVariant: Record<string, "default" | "success" | "warning" | "critical" | "info"> = {
   Pending:    "warning",
   Approved:   "success",
@@ -57,7 +60,7 @@ export default function ClientRequestsPage() {
     <AuthGuard requiredRole="client">
       <PortalHeader
         title="My Requests"
-        icon={<FileText className="h-5 w-5 text-primary" />}
+        icon={REQUESTS_ICON}
       />
 
       <main className="mx-auto max-w-5xl px-4 py-6 md:py-10">
