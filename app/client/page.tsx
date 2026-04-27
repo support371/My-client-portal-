@@ -6,8 +6,6 @@ import { AuthGuard } from "@/components/auth-guard"
 import { PortalHeader } from "@/components/portal-header"
 import { GlassCard } from "@/components/glass-card"
 import { transactions, type Transaction } from "@/lib/data"
-import { Briefcase, ArrowUpRight, ArrowDownRight } from "lucide-react"
-import { transactions } from "@/lib/data"
 import { Briefcase, ArrowUpRight, ArrowDownRight, FileText } from "lucide-react"
 import Link from "next/link"
 
