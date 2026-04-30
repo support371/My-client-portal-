@@ -29,3 +29,7 @@
 ## 2026-03-27 - [Build Artifact Hygiene & Security]
 **Learning:** Running build commands like `next build` in the sandbox generates a `.next` directory containing sensitive metadata (e.g., encryption keys) and massive binary caches. If not manually cleaned before submission or review, these can be accidentally included, causing security risks and repository bloat.
 **Action:** Always run a cleanup command (e.g., `rm -rf .next *.log`) before requesting code reviews or calling the submit tool to ensure only source changes are evaluated.
+
+## 2026-03-31 - [Admin Request Table Optimization]
+**Learning:** In data-heavy tables with status-changing actions, the entire table re-renders on every action if state is managed globally. Derived state (like status counts) can also cause performance bottlenecks if calculated with multiple .filter() calls.
+**Action:** Extract table rows into memoized components that accept derived boolean props (e.g., 'isProcessing') to isolate re-renders. Use a single O(N) pass for status count calculations to minimize overhead.
