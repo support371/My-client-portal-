@@ -51,11 +51,6 @@ const QuickAccessButtons = memo(function QuickAccessButtons({
     </div>
   )
 })
-  { label: "SuperAdmin", email: "superadmin@gem.com", pass: "super123", icon: Crown,    route: "/superadmin" },
-  { label: "Admin",      email: "admin@gem.com",      pass: "admin123", icon: Settings, route: "/admin" },
-  { label: "Team",       email: "team@gem.com",        pass: "team123", icon: Users,    route: "/team" },
-  { label: "Client",     email: "client@gem.com",     pass: "client123",icon: Briefcase,route: "/client" },
-]
 
 function roleRoute(role: string) {
   return role === "superadmin" ? "/superadmin"
@@ -85,14 +80,12 @@ export default function Home() {
     setLoading(true)
     const result = await login(email, password)
     if (result.ok) {
-      // session is now set; useEffect above will redirect once state updates.
-      // Derive route from submitted email for immediate navigation.
+      // Derive role from submitted email for immediate navigation.
       const role = email.startsWith("superadmin") ? "superadmin"
         : email.startsWith("admin")  ? "admin"
         : email.startsWith("team")   ? "team"
         : email.startsWith("client") ? "client"
         : ""
-      // Fall back to letting useEffect handle redirect if role unknown
       if (role) router.replace(roleRoute(role))
     } else {
       setError(result.error ?? "Invalid credentials.")
@@ -100,8 +93,7 @@ export default function Home() {
     }
   }
 
-  const handleQuickAccess = useCallback((item: (typeof quickAccess)[0]) => {
-  const handleQuickAccess = async (item: (typeof quickAccess)[0]) => {
+  const handleQuickAccess = useCallback(async (item: (typeof quickAccess)[0]) => {
     setLoading(true)
     const result = await login(item.email, item.pass)
     if (result.ok) {
