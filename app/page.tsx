@@ -51,11 +51,6 @@ const QuickAccessButtons = memo(function QuickAccessButtons({
     </div>
   )
 })
-  { label: "SuperAdmin", email: "superadmin@gem.com", pass: "super123", icon: Crown,    route: "/superadmin" },
-  { label: "Admin",      email: "admin@gem.com",      pass: "admin123", icon: Settings, route: "/admin" },
-  { label: "Team",       email: "team@gem.com",        pass: "team123", icon: Users,    route: "/team" },
-  { label: "Client",     email: "client@gem.com",     pass: "client123",icon: Briefcase,route: "/client" },
-]
 
 function roleRoute(role: string) {
   return role === "superadmin" ? "/superadmin"
@@ -100,8 +95,7 @@ export default function Home() {
     }
   }
 
-  const handleQuickAccess = useCallback((item: (typeof quickAccess)[0]) => {
-  const handleQuickAccess = async (item: (typeof quickAccess)[0]) => {
+  const handleQuickAccess = useCallback(async (item: (typeof quickAccess)[0]) => {
     setLoading(true)
     const result = await login(item.email, item.pass)
     if (result.ok) {
