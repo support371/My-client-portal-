@@ -29,3 +29,7 @@
 ## 2026-03-27 - [Build Artifact Hygiene & Security]
 **Learning:** Running build commands like `next build` in the sandbox generates a `.next` directory containing sensitive metadata (e.g., encryption keys) and massive binary caches. If not manually cleaned before submission or review, these can be accidentally included, causing security risks and repository bloat.
 **Action:** Always run a cleanup command (e.g., `rm -rf .next *.log`) before requesting code reviews or calling the submit tool to ensure only source changes are evaluated.
+
+## 2026-03-28 - [AuthContext Stability & Single-Pass Reductions]
+**Learning:** An unmemoized AuthContext value triggers a full application re-render on every state change, even if the session itself hasn't changed. Furthermore, calculating multiple status counts with repeated .filter() calls leads to O(S*N) complexity, which becomes a bottleneck in data-heavy admin views.
+**Action:** Always wrap AuthContext provider values in useMemo. Use a single O(N) .reduce() pass for multi-category counting in list views to ensure linear scaling.
