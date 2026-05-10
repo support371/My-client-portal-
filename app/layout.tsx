@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next"
 import { AuthProvider } from "@/lib/auth-context"
+import { Inter, JetBrains_Mono } from "next/font/google"
 import "./globals.css"
 
 const inter = Inter({

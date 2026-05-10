@@ -29,3 +29,7 @@
 ## 2026-03-27 - [Build Artifact Hygiene & Security]
 **Learning:** Running build commands like `next build` in the sandbox generates a `.next` directory containing sensitive metadata (e.g., encryption keys) and massive binary caches. If not manually cleaned before submission or review, these can be accidentally included, causing security risks and repository bloat.
 **Action:** Always run a cleanup command (e.g., `rm -rf .next *.log`) before requesting code reviews or calling the submit tool to ensure only source changes are evaluated.
+
+## 2026-04-05 - [O(N) Status Counts & Targeted Row Memoization]
+**Learning:** Calculating status counts using multiple `.filter()` calls leads to O(S*N) complexity, where S is the number of statuses. Replacing this with a single `.reduce()` pass brings it down to O(N). Additionally, passing a derived `isProcessing` boolean to memoized row components is far more efficient than passing a global `actionId`, as it prevents every row from re-rendering when an action starts on a single item.
+**Action:** Use a single `reduce` pass for aggregate counts in large lists. Pass derived state (like `isProcessing`) to memoized list items to isolate re-renders during async actions.
