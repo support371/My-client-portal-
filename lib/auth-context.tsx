@@ -10,9 +10,7 @@ import {
   useSyncExternalStore,
   type ReactNode,
 } from "react"
-import { USERS, type UserRole } from "./data"
-import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from "react"
-import { loginAction, logoutAction } from "@/lib/actions/auth"
+import { loginAction } from "@/lib/actions/auth"
 
 export type UserRole = "superadmin" | "admin" | "team" | "client"
 
@@ -79,46 +77,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setIsHydrated(true)
   }, [])
 
-  const login = useCallback((email: string, password: string): boolean => {
-    const user = USERS[email]
-    if (user && user.password === password) {
-      const newSession: Session = {
-        email,
-        role: user.role,
-        name: user.name,
-        loginTime: new Date().toISOString(),
-      }
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(newSession))
-      window.dispatchEvent(new CustomEvent("auth-update"))
-      return true
-  const [session, setSession] = useState<Session | null>(null)
-  const [hydrated, setHydrated] = useState(false)
-
-  useEffect(() => {
-    try {
-      const stored = localStorage.getItem("gem_session")
-      if (stored) setSession(JSON.parse(stored))
-    } catch {
-      localStorage.removeItem("gem_session")
-    }
-    setHydrated(true)
-  }, [])
-
-  const isLoading = !hydrated
-
   const login = useCallback(async (email: string, password: string) => {
     const result = await loginAction(email, password)
     if (!result.ok) return { ok: false, error: result.error }
 
     const newSession: Session = {
-      id:        result.user.id,
-      email:     result.user.email,
-      role:      result.user.role as UserRole,
-      name:      result.user.name,
+      id: result.user.id,
+      email: result.user.email,
+      role: result.user.role as UserRole,
+      name: result.user.name,
       loginTime: new Date().toISOString(),
     }
-    setSession(newSession)
-    localStorage.setItem("gem_session", JSON.stringify(newSession))
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(newSession))
+    window.dispatchEvent(new CustomEvent("auth-update"))
     return { ok: true }
   }, [])
 
