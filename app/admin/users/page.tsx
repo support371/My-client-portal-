@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo, memo } from "react"
 import { AuthGuard } from "@/components/auth-guard"
 import { PortalHeader } from "@/components/portal-header"
 import { GlassCard } from "@/components/glass-card"
@@ -9,12 +9,54 @@ import { getUsersAction, type UserRow } from "@/lib/actions/users"
 import { Users, ArrowLeft, Search, ShieldCheck } from "lucide-react"
 import Link from "next/link"
 
+// ⚡ Bolt Optimization: Hoist static icons to constants for stable references.
+// This prevents memoized components from re-rendering due to new JSX element references.
+const USERS_ICON = <Users className="h-5 w-5 text-primary" />
+const ARROW_LEFT_ICON = <ArrowLeft className="h-4 w-4" />
+const SEARCH_ICON = <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" />
+const SHIELD_ICON = <ShieldCheck className="h-4 w-4 text-primary" />
+
 const roleVariant: Record<string, "default" | "success" | "warning" | "critical" | "info"> = {
   superadmin: "critical",
   admin:      "warning",
   team:       "info",
   client:     "success",
 }
+
+/**
+ * ⚡ Bolt Optimization: Memoized UserRowComponent
+ *
+ * Prevents unnecessary re-renders of all rows when the search input or other
+ * parent state changes. This is critical for maintaining performance as the
+ * user list grows.
+ */
+const UserRowComponent = memo(function UserRowComponent({ user }: { user: UserRow }) {
+  return (
+    <tr className="border-b border-border/50 hover:bg-surface/50">
+      <td className="py-3 pr-4">
+        <div className="flex items-center gap-2.5">
+          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10">
+            {SHIELD_ICON}
+          </div>
+          <span className="font-medium text-foreground">{user.name}</span>
+        </div>
+      </td>
+      <td className="py-3 pr-4 text-muted">{user.email}</td>
+      <td className="py-3 pr-4">
+        <StatusBadge label={user.role} variant={roleVariant[user.role] ?? "default"} />
+      </td>
+      <td className="py-3 pr-4">
+        <StatusBadge label={user.active ? "Active" : "Inactive"} variant={user.active ? "success" : "critical"} />
+      </td>
+      <td className="py-3 pr-4 text-muted">{new Date(user.createdAt).toLocaleDateString()}</td>
+      <td className="py-3">
+        <button className="rounded-lg border border-glass-border px-3 py-1.5 text-xs font-bold text-primary transition-colors hover:bg-primary/10">
+          Manage
+        </button>
+      </td>
+    </tr>
+  )
+})
 
 export default function AdminUsersPage() {
   const [users, setUsers]     = useState<UserRow[]>([])
@@ -27,20 +69,30 @@ export default function AdminUsersPage() {
       .catch(() => setLoadError("Failed to load users."))
   }, [])
 
-  const filtered = users.filter((u) => {
-    const q = search.toLowerCase()
-    return (
+  /**
+   * ⚡ Bolt Optimization: Memoized Filtering with Normalized Query
+   *
+   * 1. Pre-normalizes the search query outside the filter loop to avoid O(N) calls to .toLowerCase().
+   * 2. Uses useMemo to ensure the filter only runs when 'users' or 'search' changes.
+   *
+   * Impact: Reduces complexity from O(N * K) to O(N) where K is number of normalization ops.
+   */
+  const filtered = useMemo(() => {
+    const q = search.toLowerCase().trim()
+    if (!q) return users
+
+    return users.filter((u) =>
       u.name.toLowerCase().includes(q) ||
       u.email.toLowerCase().includes(q) ||
       u.role.toLowerCase().includes(q)
     )
-  })
+  }, [users, search])
 
   return (
     <AuthGuard requiredRole="admin">
       <PortalHeader
         title="User Management"
-        icon={<Users className="h-5 w-5 text-primary" />}
+        icon={USERS_ICON}
       />
 
       <main className="mx-auto max-w-5xl px-4 py-6 md:py-10">
@@ -49,7 +101,7 @@ export default function AdminUsersPage() {
             href="/admin"
             className="flex items-center gap-1.5 text-sm text-muted transition-colors hover:text-primary"
           >
-            <ArrowLeft className="h-4 w-4" />
+            {ARROW_LEFT_ICON}
             Back to Admin Portal
           </Link>
         </div>
@@ -66,7 +118,7 @@ export default function AdminUsersPage() {
         <GlassCard className="mt-6">
           <div className="mb-4 flex items-center gap-3">
             <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" />
+              {SEARCH_ICON}
               <input
                 type="text"
                 placeholder="Search by name, email, or role…"
@@ -100,29 +152,7 @@ export default function AdminUsersPage() {
                       </td>
                     </tr>
                   ) : filtered.map((user) => (
-                    <tr key={user.id} className="border-b border-border/50 hover:bg-surface/50">
-                      <td className="py-3 pr-4">
-                        <div className="flex items-center gap-2.5">
-                          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10">
-                            <ShieldCheck className="h-4 w-4 text-primary" />
-                          </div>
-                          <span className="font-medium text-foreground">{user.name}</span>
-                        </div>
-                      </td>
-                      <td className="py-3 pr-4 text-muted">{user.email}</td>
-                      <td className="py-3 pr-4">
-                        <StatusBadge label={user.role} variant={roleVariant[user.role] ?? "default"} />
-                      </td>
-                      <td className="py-3 pr-4">
-                        <StatusBadge label={user.active ? "Active" : "Inactive"} variant={user.active ? "success" : "critical"} />
-                      </td>
-                      <td className="py-3 pr-4 text-muted">{new Date(user.createdAt).toLocaleDateString()}</td>
-                      <td className="py-3">
-                        <button className="rounded-lg border border-glass-border px-3 py-1.5 text-xs font-bold text-primary transition-colors hover:bg-primary/10">
-                          Manage
-                        </button>
-                      </td>
-                    </tr>
+                    <UserRowComponent key={user.id} user={user} />
                   ))}
                 </tbody>
               </table>
