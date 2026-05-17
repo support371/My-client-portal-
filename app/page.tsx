@@ -100,8 +100,7 @@ export default function Home() {
     }
   }
 
-  const handleQuickAccess = useCallback((item: (typeof quickAccess)[0]) => {
-  const handleQuickAccess = async (item: (typeof quickAccess)[0]) => {
+  const handleQuickAccess = useCallback(async (item: (typeof quickAccess)[0]) => {
     setLoading(true)
     const result = await login(item.email, item.pass)
     if (result.ok) {
