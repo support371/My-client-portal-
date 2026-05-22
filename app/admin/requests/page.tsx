@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useTransition } from "react"
+import { useState, useEffect, useTransition, useCallback, useMemo, memo } from "react"
 import { useAuth } from "@/lib/auth-context"
 import { AuthGuard } from "@/components/auth-guard"
 import { PortalHeader } from "@/components/portal-header"
@@ -13,6 +13,13 @@ import {
 } from "@/lib/actions/requests"
 import { ClipboardList, ArrowLeft, Search, Loader2 } from "lucide-react"
 import Link from "next/link"
+
+// ⚡ Bolt Optimization: Hoist static icons to constants for stable references.
+// This ensures that memoized components (like PortalHeader) don't re-render due to new JSX objects.
+const CLIPBOARD_ICON = <ClipboardList className="h-5 w-5 text-primary" />
+const ARROW_LEFT_ICON = <ArrowLeft className="h-4 w-4" />
+const SEARCH_ICON = <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" />
+const LOADER_ICON_SMALL = <Loader2 className="h-3 w-3 animate-spin" />
 
 const statusVariant: Record<string, "default" | "success" | "warning" | "critical" | "info"> = {
   Pending:    "warning",
@@ -28,6 +35,60 @@ const priorityVariant: Record<string, "default" | "warning" | "critical"> = {
 const ALL_STATUSES = ["All", "Pending", "In Review", "Approved", "Rejected"] as const
 type FilterStatus = typeof ALL_STATUSES[number]
 
+/**
+ * ⚡ Bolt Optimization: RequestRowComponent
+ *
+ * Memoized to prevent unnecessary re-renders of the entire table when a single
+ * request's status is being updated. By passing 'isProcessing' as a derived boolean,
+ * we ensure that only the target row reconciles during the transition.
+ */
+const RequestRowComponent = memo(function RequestRowComponent({
+  req,
+  isProcessing,
+  onStatusChange,
+}: {
+  req: RequestRow
+  isProcessing: boolean
+  onStatusChange: (id: string, status: string) => void
+}) {
+  return (
+    <tr className="border-b border-border/50 hover:bg-surface/50">
+      <td className="py-3 pr-4 font-medium text-foreground">{req.client.name}</td>
+      <td className="py-3 pr-4 text-muted">{req.type}</td>
+      <td className="max-w-[180px] truncate py-3 pr-4 text-foreground">{req.subject}</td>
+      <td className="py-3 pr-4">
+        <StatusBadge label={req.priority} variant={priorityVariant[req.priority] ?? "default"} />
+      </td>
+      <td className="py-3 pr-4">
+        <StatusBadge label={req.status} variant={statusVariant[req.status] ?? "default"} />
+      </td>
+      <td className="py-3 pr-4 text-muted">{new Date(req.createdAt).toLocaleDateString()}</td>
+      <td className="py-3">
+        <div className="flex gap-1.5">
+          {req.status !== "Approved" && (
+            <button
+              disabled={isProcessing}
+              onClick={() => onStatusChange(req.id, "Approved")}
+              className="rounded px-2 py-1 text-xs font-bold text-primary border border-glass-border hover:bg-primary/10 disabled:opacity-50"
+            >
+              {isProcessing ? LOADER_ICON_SMALL : "Approve"}
+            </button>
+          )}
+          {req.status !== "Rejected" && (
+            <button
+              disabled={isProcessing}
+              onClick={() => onStatusChange(req.id, "Rejected")}
+              className="rounded px-2 py-1 text-xs font-bold text-destructive border border-glass-border hover:bg-destructive/10 disabled:opacity-50"
+            >
+              Reject
+            </button>
+          )}
+        </div>
+      </td>
+    </tr>
+  )
+})
+
 export default function AdminRequestsPage() {
   const { session } = useAuth()
   const [requests, setRequests] = useState<RequestRow[]>([])
@@ -37,15 +98,17 @@ export default function AdminRequestsPage() {
   const [loadError, setLoadError] = useState("")
   const [isPending, startTransition] = useTransition()
 
-  const reload = () => {
+  // ⚡ Bolt Optimization: Memoize reload function to prevent cascading re-renders.
+  const reload = useCallback(() => {
     getRequestsAction()
       .then(setRequests)
       .catch(() => setLoadError("Failed to load requests."))
-  }
+  }, [])
 
-  useEffect(reload, [])
+  useEffect(reload, [reload])
 
-  const handleStatusChange = (requestId: string, status: string) => {
+  // ⚡ Bolt Optimization: Memoize event handlers with stable dependencies.
+  const handleStatusChange = useCallback((requestId: string, status: string) => {
     if (!session?.email) return
     setActionId(requestId)
     startTransition(async () => {
@@ -53,28 +116,47 @@ export default function AdminRequestsPage() {
       reload()
       setActionId(null)
     })
-  }
+  }, [session?.email, reload])
 
-  const filtered = requests.filter((r) => {
-    const q = search.toLowerCase()
-    const matchSearch =
-      r.client.name.toLowerCase().includes(q) ||
-      r.subject.toLowerCase().includes(q) ||
-      r.id.toLowerCase().includes(q)
-    const matchFilter = filter === "All" || r.status === filter
-    return matchSearch && matchFilter
-  })
+  // ⚡ Bolt Optimization: Pre-normalize search query once per render.
+  const query = search.toLowerCase()
 
-  const counts = ALL_STATUSES.reduce((acc, s) => ({
-    ...acc,
-    [s]: s === "All" ? requests.length : requests.filter((r) => r.status === s).length,
-  }), {} as Record<FilterStatus, number>)
+  // ⚡ Bolt Optimization: Memoize filtered list calculation (O(N)).
+  const filtered = useMemo(() => {
+    return requests.filter((r) => {
+      const matchSearch =
+        query === "" ||
+        r.client.name.toLowerCase().includes(query) ||
+        r.subject.toLowerCase().includes(query) ||
+        r.id.toLowerCase().includes(query)
+      const matchFilter = filter === "All" || r.status === filter
+      return matchSearch && matchFilter
+    })
+  }, [requests, query, filter])
+
+  // ⚡ Bolt Optimization: Calculate counts in a single O(N) pass.
+  // Impact: Reduces complexity from O(S*N) to O(N), where S is the number of statuses.
+  const counts = useMemo(() => {
+    const baseCounts = {
+      All: requests.length,
+      Pending: 0,
+      "In Review": 0,
+      Approved: 0,
+      Rejected: 0,
+    }
+    return requests.reduce((acc, r) => {
+      if (r.status in acc) {
+        acc[r.status as keyof typeof acc]++
+      }
+      return acc
+    }, baseCounts)
+  }, [requests])
 
   return (
     <AuthGuard requiredRole="admin">
       <PortalHeader
         title="Request Management"
-        icon={<ClipboardList className="h-5 w-5 text-primary" />}
+        icon={CLIPBOARD_ICON}
       />
 
       <main className="mx-auto max-w-5xl px-4 py-6 md:py-10">
@@ -83,7 +165,7 @@ export default function AdminRequestsPage() {
             href="/admin"
             className="flex items-center gap-1.5 text-sm text-muted transition-colors hover:text-primary"
           >
-            <ArrowLeft className="h-4 w-4" />
+            {ARROW_LEFT_ICON}
             Back to Admin Portal
           </Link>
         </div>
@@ -114,7 +196,7 @@ export default function AdminRequestsPage() {
 
         <GlassCard className="mt-4">
           <div className="relative mb-4">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" />
+            {SEARCH_ICON}
             <input
               type="text"
               placeholder="Search by client, ID, or subject…"
@@ -142,40 +224,12 @@ export default function AdminRequestsPage() {
                       <td colSpan={7} className="py-8 text-center text-sm text-muted">No requests match your filters.</td>
                     </tr>
                   ) : filtered.map((req) => (
-                    <tr key={req.id} className="border-b border-border/50 hover:bg-surface/50">
-                      <td className="py-3 pr-4 font-medium text-foreground">{req.client.name}</td>
-                      <td className="py-3 pr-4 text-muted">{req.type}</td>
-                      <td className="max-w-[180px] truncate py-3 pr-4 text-foreground">{req.subject}</td>
-                      <td className="py-3 pr-4">
-                        <StatusBadge label={req.priority} variant={priorityVariant[req.priority] ?? "default"} />
-                      </td>
-                      <td className="py-3 pr-4">
-                        <StatusBadge label={req.status} variant={statusVariant[req.status] ?? "default"} />
-                      </td>
-                      <td className="py-3 pr-4 text-muted">{new Date(req.createdAt).toLocaleDateString()}</td>
-                      <td className="py-3">
-                        <div className="flex gap-1.5">
-                          {req.status !== "Approved" && (
-                            <button
-                              disabled={isPending && actionId === req.id}
-                              onClick={() => handleStatusChange(req.id, "Approved")}
-                              className="rounded px-2 py-1 text-xs font-bold text-primary border border-glass-border hover:bg-primary/10 disabled:opacity-50"
-                            >
-                              {isPending && actionId === req.id ? <Loader2 className="h-3 w-3 animate-spin" /> : "Approve"}
-                            </button>
-                          )}
-                          {req.status !== "Rejected" && (
-                            <button
-                              disabled={isPending && actionId === req.id}
-                              onClick={() => handleStatusChange(req.id, "Rejected")}
-                              className="rounded px-2 py-1 text-xs font-bold text-destructive border border-glass-border hover:bg-destructive/10 disabled:opacity-50"
-                            >
-                              Reject
-                            </button>
-                          )}
-                        </div>
-                      </td>
-                    </tr>
+                    <RequestRowComponent
+                      key={req.id}
+                      req={req}
+                      isProcessing={isPending && actionId === req.id}
+                      onStatusChange={handleStatusChange}
+                    />
                   ))}
                 </tbody>
               </table>
