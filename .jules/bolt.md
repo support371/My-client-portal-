@@ -29,3 +29,7 @@
 ## 2026-03-27 - [Build Artifact Hygiene & Security]
 **Learning:** Running build commands like `next build` in the sandbox generates a `.next` directory containing sensitive metadata (e.g., encryption keys) and massive binary caches. If not manually cleaned before submission or review, these can be accidentally included, causing security risks and repository bloat.
 **Action:** Always run a cleanup command (e.g., `rm -rf .next *.log`) before requesting code reviews or calling the submit tool to ensure only source changes are evaluated.
+
+## 2026-05-22 - [Algorithmic Optimization for Status Counts]
+**Learning:** Calculating status counts for a large list by calling `.filter()` multiple times (once for each status) results in $O(S \times N)$ complexity, where $S$ is the number of statuses and $N$ is the number of items. This can be optimized to $O(N)$ by using a single `.forEach` or `.reduce` pass within a `useMemo`.
+**Action:** Use a single-pass `reduce` or `forEach` loop within `useMemo` to calculate aggregate statistics from a list.
