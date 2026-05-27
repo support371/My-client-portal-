@@ -6,10 +6,7 @@ import { PortalHeader } from "@/components/portal-header"
 import { GlassCard } from "@/components/glass-card"
 import { UserLookup } from "@/components/user-lookup"
 import { portfolios, type Portfolio } from "@/lib/data"
-import { Settings } from "lucide-react"
-import { StatusBadge } from "@/components/status-badge"
-import { portfolios, teams } from "@/lib/data"
-import { Settings, Search, ClipboardList, Users } from "lucide-react"
+import { Settings, ClipboardList, Users } from "lucide-react"
 import Link from "next/link"
 
 // ⚡ Bolt Optimization: Move static JSX out of the render cycle.
