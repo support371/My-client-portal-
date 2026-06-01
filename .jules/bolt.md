@@ -33,3 +33,7 @@
 ## 2026-05-27 - [O(N) Status Count & Row Memoization]
 **Learning:** Calculating status counts using multiple `.filter()` calls inside a `.reduce()` results in O(S*N) complexity, which becomes a bottleneck as the dataset grows. Additionally, updating a single item in a large list triggers re-renders for all rows if the row component isn't memoized with stable prop references.
 **Action:** Use a single `.reduce()` pass wrapped in `useMemo` for count aggregations. Extract list items into `React.memo` components and pass derived primitive props (like `isProcessing`) instead of global state objects to isolate re-renders.
+
+## 2026-06-01 - [Admin Users Table Optimization]
+**Learning:** Table components with search-based filtering suffer from O(N) re-renders during every keystroke if rows aren't memoized. Hoisting static Lucide icons to module constants ensures stable prop references for memoized components, preventing unnecessary reconciliation cycles even when parent state changes.
+**Action:** Extract and memoize list items (like table rows) and hoist all static JSX icons when optimizing pages with high-frequency state updates like search inputs.
