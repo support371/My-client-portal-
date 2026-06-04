@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useTransition } from "react"
+import { useState, useEffect, useTransition, useCallback, memo } from "react"
 import { useAuth } from "@/lib/auth-context"
 import { AuthGuard } from "@/components/auth-guard"
 import { PortalHeader } from "@/components/portal-header"
@@ -10,6 +10,11 @@ import { createRequestAction, getMyRequestsAction, type RequestRow } from "@/lib
 import { FileText, ArrowLeft, Loader2 } from "lucide-react"
 import Link from "next/link"
 
+// ⚡ Bolt Optimization: Hoist static icons to constants for stable references.
+const REQUESTS_ICON = <FileText className="h-5 w-5 text-primary" />
+const ARROW_LEFT_ICON = <ArrowLeft className="h-4 w-4" />
+const LOADER_ICON = <Loader2 className="h-4 w-4 animate-spin" />
+
 const statusVariant: Record<string, "default" | "success" | "warning" | "critical" | "info"> = {
   Pending:    "warning",
   Approved:   "success",
@@ -18,6 +23,31 @@ const statusVariant: Record<string, "default" | "success" | "warning" | "critica
 }
 
 const requestTypes = ["Withdrawal", "Deposit", "Support", "Account Change"] as const
+
+/**
+ * ⚡ Bolt Optimization: Memoize individual request items.
+ * Prevents redundant re-renders of the list when the form state updates.
+ */
+const ClientRequestItem = memo(function ClientRequestItem({ req }: { req: RequestRow }) {
+  return (
+    <div
+      className="rounded-lg border border-border/50 px-3 py-3 transition-colors hover:bg-surface"
+    >
+      <div className="flex items-center justify-between gap-2">
+        <span className="text-sm font-medium text-foreground">{req.subject}</span>
+        <StatusBadge
+          label={req.status}
+          variant={statusVariant[req.status] ?? "default"}
+        />
+      </div>
+      <div className="mt-1 flex items-center gap-3 text-xs text-muted">
+        <span>{req.type}</span>
+        <span>·</span>
+        <span>{new Date(req.createdAt).toLocaleDateString()}</span>
+      </div>
+    </div>
+  )
+})
 
 export default function ClientRequestsPage() {
   const { session } = useAuth()
@@ -36,7 +66,8 @@ export default function ClientRequestsPage() {
       .catch(() => setLoadError("Failed to load requests."))
   }, [session?.email, submitted])
 
-  const handleSubmit = (e: React.FormEvent) => {
+  // ⚡ Bolt Optimization: Wrap handleSubmit in useCallback for stable reference.
+  const handleSubmit = useCallback((e: React.FormEvent) => {
     e.preventDefault()
     if (!subject.trim() || !session?.email) return
 
@@ -51,13 +82,13 @@ export default function ClientRequestsPage() {
         setSubject("")
       }
     })
-  }
+  }, [type, subject, session?.email])
 
   return (
     <AuthGuard requiredRole="client">
       <PortalHeader
         title="My Requests"
-        icon={<FileText className="h-5 w-5 text-primary" />}
+        icon={REQUESTS_ICON}
       />
 
       <main className="mx-auto max-w-5xl px-4 py-6 md:py-10">
@@ -66,7 +97,7 @@ export default function ClientRequestsPage() {
             href="/client"
             className="flex items-center gap-1.5 text-sm text-muted transition-colors hover:text-primary"
           >
-            <ArrowLeft className="h-4 w-4" />
+            {ARROW_LEFT_ICON}
             Back to Client Portal
           </Link>
         </div>
@@ -121,7 +152,7 @@ export default function ClientRequestsPage() {
                   disabled={isPending}
                   className="flex h-11 w-full items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-primary to-secondary text-sm font-bold text-primary-foreground transition-transform hover:scale-[1.02] disabled:opacity-60"
                 >
-                  {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : "Submit Request"}
+                  {isPending ? LOADER_ICON : "Submit Request"}
                 </button>
               </form>
             )}
@@ -137,23 +168,7 @@ export default function ClientRequestsPage() {
             ) : (
               <div className="space-y-2">
                 {requests.map((req) => (
-                  <div
-                    key={req.id}
-                    className="rounded-lg border border-border/50 px-3 py-3 transition-colors hover:bg-surface"
-                  >
-                    <div className="flex items-center justify-between gap-2">
-                      <span className="text-sm font-medium text-foreground">{req.subject}</span>
-                      <StatusBadge
-                        label={req.status}
-                        variant={statusVariant[req.status] ?? "default"}
-                      />
-                    </div>
-                    <div className="mt-1 flex items-center gap-3 text-xs text-muted">
-                      <span>{req.type}</span>
-                      <span>·</span>
-                      <span>{new Date(req.createdAt).toLocaleDateString()}</span>
-                    </div>
-                  </div>
+                  <ClientRequestItem key={req.id} req={req} />
                 ))}
               </div>
             )}
