@@ -33,3 +33,7 @@
 ## 2026-05-27 - [O(N) Status Count & Row Memoization]
 **Learning:** Calculating status counts using multiple `.filter()` calls inside a `.reduce()` results in O(S*N) complexity, which becomes a bottleneck as the dataset grows. Additionally, updating a single item in a large list triggers re-renders for all rows if the row component isn't memoized with stable prop references.
 **Action:** Use a single `.reduce()` pass wrapped in `useMemo` for count aggregations. Extract list items into `React.memo` components and pass derived primitive props (like `isProcessing`) instead of global state objects to isolate re-renders.
+
+## 2026-06-08 - [persona-boundaries-and-architectural-integrity]
+**Learning:** Attempting to bypass environment-specific blockers (like an unreachable PostgreSQL instance) by switching the database provider to SQLite violates the "Bolt" persona's strict boundary against unauthorized architectural changes. Such changes are correctly flagged as major regressions in code review, even if they facilitate local verification.
+**Action:** Always respect the existing architecture. If a service like the database is unreachable, document the blocker and rely on static verification (like 'npm run build') rather than making destructive or structural changes to the codebase to force integration tests to pass.
