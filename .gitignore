@@ -42,3 +42,15 @@ prisma/*.db-wal
 .idea/
 *.swp
 *.swo
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+test-results/
+
+# Logs
+*.log
+dev.db
