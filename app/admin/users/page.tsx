@@ -76,6 +76,9 @@ export default function AdminUsersPage() {
     )
   }, [users, search])
 
+  // ⚡ Bolt Optimization: Memoize user count display.
+  const userCount = useMemo(() => users.length, [users])
+
   return (
     <AuthGuard requiredRole="admin">
       <PortalHeader
@@ -99,7 +102,7 @@ export default function AdminUsersPage() {
             User Management
           </h1>
           <p className="mt-1 text-sm text-muted">
-            Platform accounts and role assignments ({users.length} users)
+            Platform accounts and role assignments ({userCount} users)
           </p>
         </div>
 
