@@ -9,24 +9,24 @@ import { getUsersAction, type UserRow } from "@/lib/actions/users"
 import { Users, ArrowLeft, Search, ShieldCheck } from "lucide-react"
 import Link from "next/link"
 
-// ⚡ Bolt Optimization: Hoist static icons to constants for stable references.
-const USERS_ICON = <Users className="h-5 w-5 text-primary" />
-const ARROW_LEFT_ICON = <ArrowLeft className="h-4 w-4" />
-const SEARCH_ICON = <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" />
-const SHIELD_ICON = <ShieldCheck className="h-4 w-4 text-primary" />
-
-const roleVariant: Record<string, "default" | "success" | "warning" | "critical" | "info"> = {
+// Hoist static configuration and icons to prevent re-creation on every render
+const ROLE_VARIANT: Record<string, "default" | "success" | "warning" | "critical" | "info"> = {
   superadmin: "critical",
   admin:      "warning",
   team:       "info",
   client:     "success",
 }
 
+const USERS_ICON = <Users className="h-5 w-5 text-primary" />
+const ARROW_LEFT_ICON = <ArrowLeft className="h-4 w-4" />
+const SEARCH_ICON = <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" />
+const SHIELD_ICON = <ShieldCheck className="h-4 w-4 text-primary" />
+
 /**
- * ⚡ Bolt Optimization: Memoize individual user table rows.
- * Prevents re-rendering all rows when the parent component's state (like search) changes.
+ * Memoized UserRow component to prevent unnecessary re-renders of table rows
+ * when the parent search state changes.
  */
-const UserRowComponent = memo(function UserRowComponent({ user }: { user: UserRow }) {
+const UserRowComponent = memo(({ user }: { user: UserRow }) => {
   return (
     <tr className="border-b border-border/50 hover:bg-surface/50">
       <td className="py-3 pr-4">
@@ -39,7 +39,7 @@ const UserRowComponent = memo(function UserRowComponent({ user }: { user: UserRo
       </td>
       <td className="py-3 pr-4 text-muted">{user.email}</td>
       <td className="py-3 pr-4">
-        <StatusBadge label={user.role} variant={roleVariant[user.role] ?? "default"} />
+        <StatusBadge label={user.role} variant={ROLE_VARIANT[user.role] ?? "default"} />
       </td>
       <td className="py-3 pr-4">
         <StatusBadge label={user.active ? "Active" : "Inactive"} variant={user.active ? "success" : "critical"} />
@@ -54,6 +54,8 @@ const UserRowComponent = memo(function UserRowComponent({ user }: { user: UserRo
   )
 })
 
+UserRowComponent.displayName = "UserRowComponent"
+
 export default function AdminUsersPage() {
   const [users, setUsers]     = useState<UserRow[]>([])
   const [search, setSearch]   = useState("")
@@ -65,17 +67,15 @@ export default function AdminUsersPage() {
       .catch(() => setLoadError("Failed to load users."))
   }, [])
 
-  // ⚡ Bolt Optimization: Memoize filtering logic with pre-normalized search query.
-  // Reduces redundant string operations during O(N) calculations.
+  // Memoize filtered results to avoid O(N) calculations on every render
   const filtered = useMemo(() => {
     const q = search.toLowerCase().trim()
-    return users.filter((u) => {
-      return (
-        u.name.toLowerCase().includes(q) ||
-        u.email.toLowerCase().includes(q) ||
-        u.role.toLowerCase().includes(q)
-      )
-    })
+    if (!q) return users
+    return users.filter((u) =>
+      u.name.toLowerCase().includes(q) ||
+      u.email.toLowerCase().includes(q) ||
+      u.role.toLowerCase().includes(q)
+    )
   }, [users, search])
 
   return (
@@ -141,9 +141,11 @@ export default function AdminUsersPage() {
                         {users.length === 0 ? "Loading…" : "No users match your search."}
                       </td>
                     </tr>
-                  ) : filtered.map((user) => (
-                    <UserRowComponent key={user.id} user={user} />
-                  ))}
+                  ) : (
+                    filtered.map((user) => (
+                      <UserRowComponent key={user.id} user={user} />
+                    ))
+                  )}
                 </tbody>
               </table>
             </div>
