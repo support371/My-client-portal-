@@ -39,6 +39,89 @@ const TransactionItem = memo(function TransactionItem({ tx }: { tx: Transaction 
   )
 })
 
+/**
+ * ⚡ Bolt Optimization: Memoize the portfolio summary section.
+ * Isolates this view from unrelated state changes in the parent ClientPage.
+ */
+const PortfolioSummary = memo(function PortfolioSummary() {
+  return (
+    <GlassCard>
+      <h3 className="mb-4 text-base font-bold text-foreground">Portfolio Summary</h3>
+      <div className="rounded-xl border border-glass-border bg-gradient-to-br from-primary/10 to-secondary/10 p-5 text-center">
+        <p className="text-xs font-medium uppercase tracking-wider text-muted">Total Balance</p>
+        <p className="mt-2 text-4xl font-extrabold text-primary md:text-5xl">$100,000.00</p>
+        <div className="mt-2 flex items-center justify-center gap-1 text-sm font-bold text-primary">
+          {UP_ICON}
+          +2.45% (Past 24h)
+        </div>
+      </div>
+      <div className="mt-4 flex gap-3">
+        <button className="flex-1 rounded-lg bg-gradient-to-r from-primary to-secondary py-2.5 text-sm font-bold text-primary-foreground transition-transform hover:scale-[1.02]">
+          Deposit
+        </button>
+        <button className="flex-1 rounded-lg border border-glass-border py-2.5 text-sm font-bold text-primary transition-colors hover:bg-primary/10">
+          Withdraw
+        </button>
+      </div>
+    </GlassCard>
+  )
+})
+
+/**
+ * ⚡ Bolt Optimization: Memoize the virtual trading section.
+ * Isolates this complex form from unrelated re-renders.
+ */
+const VirtualTrading = memo(function VirtualTrading() {
+  return (
+    <GlassCard>
+      <h3 className="mb-4 text-base font-bold text-foreground">Virtual Trading</h3>
+      <div className="space-y-4">
+        <div>
+          <label className="mb-1.5 block text-xs font-medium text-muted">Select Asset</label>
+          <select className="h-11 w-full rounded-lg border border-glass-border bg-input px-3 text-base text-foreground outline-none focus:border-primary">
+            <option>GEM Digital Asset (GDA)</option>
+            <option>ATR Real Estate Token (RET)</option>
+            <option>Global Equity Index</option>
+          </select>
+        </div>
+        <div>
+          <label className="mb-1.5 block text-xs font-medium text-muted">{"Amount ($)"}</label>
+          <input
+            type="number"
+            defaultValue={1000}
+            className="h-11 w-full rounded-lg border border-glass-border bg-input px-3 text-base text-foreground outline-none focus:border-primary"
+          />
+        </div>
+        <div className="flex gap-3">
+          <button className="flex-1 rounded-lg bg-primary py-2.5 text-sm font-bold text-primary-foreground transition-transform hover:scale-[1.02]">
+            BUY
+          </button>
+          <button className="flex-1 rounded-lg bg-destructive py-2.5 text-sm font-bold text-destructive-foreground transition-transform hover:scale-[1.02]">
+            SELL
+          </button>
+        </div>
+      </div>
+    </GlassCard>
+  )
+})
+
+/**
+ * ⚡ Bolt Optimization: Memoize the transaction history section.
+ * Pass transactions as props to follow React best practices for memoization stability.
+ */
+const TransactionHistory = memo(function TransactionHistory({ list }: { list: Transaction[] }) {
+  return (
+    <GlassCard className="mt-4">
+      <h3 className="mb-4 text-base font-bold text-foreground">Recent Transactions</h3>
+      <div className="space-y-1">
+        {list.map((tx) => (
+          <TransactionItem key={tx.id} tx={tx} />
+        ))}
+      </div>
+    </GlassCard>
+  )
+})
+
 export default function ClientPage() {
   const { session } = useAuth()
 
@@ -71,68 +154,11 @@ export default function ClientPage() {
         </div>
 
         <div className="mt-6 grid gap-4 md:grid-cols-2">
-          {/* Portfolio Summary */}
-          <GlassCard>
-            <h3 className="mb-4 text-base font-bold text-foreground">Portfolio Summary</h3>
-            <div className="rounded-xl border border-glass-border bg-gradient-to-br from-primary/10 to-secondary/10 p-5 text-center">
-              <p className="text-xs font-medium uppercase tracking-wider text-muted">Total Balance</p>
-              <p className="mt-2 text-4xl font-extrabold text-primary md:text-5xl">$100,000.00</p>
-              <div className="mt-2 flex items-center justify-center gap-1 text-sm font-bold text-primary">
-                {UP_ICON}
-                +2.45% (Past 24h)
-              </div>
-            </div>
-            <div className="mt-4 flex gap-3">
-              <button className="flex-1 rounded-lg bg-gradient-to-r from-primary to-secondary py-2.5 text-sm font-bold text-primary-foreground transition-transform hover:scale-[1.02]">
-                Deposit
-              </button>
-              <button className="flex-1 rounded-lg border border-glass-border py-2.5 text-sm font-bold text-primary transition-colors hover:bg-primary/10">
-                Withdraw
-              </button>
-            </div>
-          </GlassCard>
-
-          {/* Virtual Trading */}
-          <GlassCard>
-            <h3 className="mb-4 text-base font-bold text-foreground">Virtual Trading</h3>
-            <div className="space-y-4">
-              <div>
-                <label className="mb-1.5 block text-xs font-medium text-muted">Select Asset</label>
-                <select className="h-11 w-full rounded-lg border border-glass-border bg-input px-3 text-base text-foreground outline-none focus:border-primary">
-                  <option>GEM Digital Asset (GDA)</option>
-                  <option>ATR Real Estate Token (RET)</option>
-                  <option>Global Equity Index</option>
-                </select>
-              </div>
-              <div>
-                <label className="mb-1.5 block text-xs font-medium text-muted">{"Amount ($)"}</label>
-                <input
-                  type="number"
-                  defaultValue={1000}
-                  className="h-11 w-full rounded-lg border border-glass-border bg-input px-3 text-base text-foreground outline-none focus:border-primary"
-                />
-              </div>
-              <div className="flex gap-3">
-                <button className="flex-1 rounded-lg bg-primary py-2.5 text-sm font-bold text-primary-foreground transition-transform hover:scale-[1.02]">
-                  BUY
-                </button>
-                <button className="flex-1 rounded-lg bg-destructive py-2.5 text-sm font-bold text-destructive-foreground transition-transform hover:scale-[1.02]">
-                  SELL
-                </button>
-              </div>
-            </div>
-          </GlassCard>
+          <PortfolioSummary />
+          <VirtualTrading />
         </div>
 
-        {/* Recent Transactions */}
-        <GlassCard className="mt-4">
-          <h3 className="mb-4 text-base font-bold text-foreground">Recent Transactions</h3>
-          <div className="space-y-1">
-            {transactions.map((tx) => (
-              <TransactionItem key={tx.id} tx={tx} />
-            ))}
-          </div>
-        </GlassCard>
+        <TransactionHistory list={transactions} />
       </main>
     </AuthGuard>
   )
