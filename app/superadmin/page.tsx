@@ -9,6 +9,40 @@ import { StatusBadge } from "@/components/status-badge"
 import { tenants, logs, type Tenant, type LogEntry } from "@/lib/data"
 import { Crown } from "lucide-react"
 
+/**
+ * ⚡ Bolt Optimization: Memoized TenantRow component.
+ * Prevents full table re-renders when parent state updates.
+ */
+const TenantRow = memo(function TenantRow({ tenant }: { tenant: Tenant }) {
+  return (
+    <tr className="border-b border-border/50">
+      <td className="py-3 pr-4 font-medium text-foreground">{tenant.name}</td>
+      <td className="py-3 pr-4">
+        <StatusBadge
+          label={tenant.status}
+          variant={tenant.status.toLowerCase() as "healthy" | "warning" | "critical"}
+        />
+      </td>
+      <td className="py-3 pr-4 text-muted">{tenant.users}</td>
+      <td className="py-3 font-semibold text-foreground">{tenant.revenue}</td>
+    </tr>
+  )
+})
+
+/**
+ * ⚡ Bolt Optimization: Memoized SystemLogItem component.
+ * Prevents unnecessary re-renders in the log list.
+ */
+const SystemLogItem = memo(function SystemLogItem({ log }: { log: LogEntry }) {
+  return (
+    <div className="flex flex-col gap-0.5 border-b border-border/30 pb-2 md:flex-row md:items-center md:gap-3">
+      <span className="text-xs text-muted">[{log.time}]</span>
+      <span className="text-xs font-semibold text-secondary">{log.user}</span>
+      <span className="text-xs text-foreground">{log.action}</span>
+    </div>
+  )
+})
+
 // ⚡ Bolt Optimization: Move static icon out of render function.
 const SUPERADMIN_ICON = <Crown className="h-5 w-5 text-primary" />
 
