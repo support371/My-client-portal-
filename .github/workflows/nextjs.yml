@@ -1,4 +1,4 @@
-name: Next.js CI
+name: CI
 
 on:
   push:
@@ -9,27 +9,15 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-
     steps:
     - uses: actions/checkout@v4
-
-    - name: Install pnpm
-      uses: pnpm/action-setup@v4
+    - uses: pnpm/action-setup@v4
       with:
         version: 10
-
-    - name: Use Node.js 20
-      uses: actions/setup-node@v4
+    - uses: actions/setup-node@v4
       with:
         node-version: 20
         cache: 'pnpm'
-
-    - name: Install dependencies
-      run: pnpm install --no-frozen-lockfile
-
-    - name: Generate Prisma Client
-      run: npx prisma generate
-
-    - name: Build and Lint
-      run: |
-        pnpm build
+    - run: pnpm install --no-frozen-lockfile
+    - run: npx prisma generate
+    - run: pnpm build
