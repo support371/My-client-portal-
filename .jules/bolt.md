@@ -30,6 +30,10 @@
 **Learning:** Running build commands like `next build` in the sandbox generates a `.next` directory containing sensitive metadata (e.g., encryption keys) and massive binary caches. If not manually cleaned before submission or review, these can be accidentally included, causing security risks and repository bloat.
 **Action:** Always run a cleanup command (e.g., `rm -rf .next *.log`) before requesting code reviews or calling the submit tool to ensure only source changes are evaluated.
 
+## 2026-06-26 - [Agent Artifact Cleanup & Repo Hygiene]
+**Learning:** Automated testing and environment profiling can generate transient artifacts like `__pycache__`, `test-results/`, and `dev_output.log`. These "agent-created" files are not captured by standard build cleanups but are flagged during code review as contamination.
+**Action:** Explicitly run a workspace purge (`find . -name "__pycache__" -type d -exec rm -rf {} + && rm -rf test-results/ *.log`) before staging changes to ensure only intentional code modifications are committed.
+
 ## 2026-05-27 - [O(N) Status Count & Row Memoization]
 **Learning:** Calculating status counts using multiple `.filter()` calls inside a `.reduce()` results in O(S*N) complexity, which becomes a bottleneck as the dataset grows. Additionally, updating a single item in a large list triggers re-renders for all rows if the row component isn't memoized with stable prop references.
 **Action:** Use a single `.reduce()` pass wrapped in `useMemo` for count aggregations. Extract list items into `React.memo` components and pass derived primitive props (like `isProcessing`) instead of global state objects to isolate re-renders.
