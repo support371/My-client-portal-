@@ -15,6 +15,7 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
+    timeout-minutes: 10 # ⚡ Bolt: Fail fast to save resources
 
     steps:
       - name: Checkout
