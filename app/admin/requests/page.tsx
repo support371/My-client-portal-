@@ -16,6 +16,7 @@ import Link from "next/link"
 
 // ⚡ Bolt Optimization: Hoist static icons outside the render cycle.
 const REQUEST_ICON = <ClipboardList className="h-5 w-5 text-primary" />
+const SEARCH_ICON = <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" />
 
 const statusVariant: Record<string, "default" | "success" | "warning" | "critical" | "info"> = {
   Pending:    "warning",
@@ -83,36 +84,36 @@ const RequestRowComponent = memo(function RequestRowComponent({
   )
 })
 
-export default function AdminRequestsPage() {
+/**
+ * ⚡ Bolt Optimization: RequestWorkspace Component
+ *
+ * Pushes high-frequency 'search' and 'filter' state down into a dedicated component.
+ * This ensures that typing in the search bar or changing filter tabs doesn't re-render
+ * the entire AdminRequestsPage, header, or static title sections.
+ */
+const RequestWorkspace = memo(function RequestWorkspace({
+  requests,
+  onReload,
+}: {
+  requests: RequestRow[]
+  onReload: () => void
+}) {
   const { session } = useAuth()
-  const [requests, setRequests] = useState<RequestRow[]>([])
   const [search, setSearch]     = useState("")
   const [filter, setFilter]     = useState<FilterStatus>("All")
   const [actionId, setActionId] = useState<string | null>(null)
-  const [loadError, setLoadError] = useState("")
   const [isPending, startTransition] = useTransition()
 
-  // ⚡ Bolt Optimization: Memoize reload function.
-  const reload = useCallback(() => {
-    getRequestsAction()
-      .then(setRequests)
-      .catch(() => setLoadError("Failed to load requests."))
-  }, [])
-
-  useEffect(reload, [reload])
-
-  // ⚡ Bolt Optimization: Memoize status change handler.
   const handleStatusChange = useCallback((requestId: string, status: string) => {
     if (!session?.email) return
     setActionId(requestId)
     startTransition(async () => {
       await updateRequestStatusAction({ requestId, status, adminEmail: session.email })
-      reload()
+      onReload()
       setActionId(null)
     })
-  }, [session?.email, reload])
+  }, [session?.email, onReload])
 
-  // ⚡ Bolt Optimization: Memoize filtering logic with pre-normalized search query.
   const filtered = useMemo(() => {
     const q = search.toLowerCase().trim()
     return requests.filter((r) => {
@@ -125,7 +126,6 @@ export default function AdminRequestsPage() {
     })
   }, [requests, search, filter])
 
-  // ⚡ Bolt Optimization: O(N) status count calculation using useMemo and single pass.
   const counts = useMemo(() => {
     const baseCounts = {
       All: requests.length,
@@ -142,6 +142,79 @@ export default function AdminRequestsPage() {
       return acc
     }, baseCounts)
   }, [requests])
+
+  return (
+    <>
+      {/* Filter tabs */}
+      <div className="mt-6 flex flex-wrap gap-2">
+        {ALL_STATUSES.map((s) => (
+          <button
+            key={s}
+            onClick={() => setFilter(s)}
+            className={`rounded-lg px-3 py-1.5 text-xs font-bold transition-colors ${
+              filter === s
+                ? "bg-gradient-to-r from-primary to-secondary text-primary-foreground"
+                : "border border-glass-border text-muted hover:text-primary"
+            }`}
+          >
+            {s} ({counts[s]})
+          </button>
+        ))}
+      </div>
+
+      <GlassCard className="mt-4">
+        <div className="relative mb-4">
+          {SEARCH_ICON}
+          <input
+            type="text"
+            placeholder="Search by client, ID, or subject…"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="h-11 w-full rounded-lg border border-glass-border bg-input pl-10 pr-3 text-base text-foreground outline-none transition-colors placeholder:text-muted-foreground focus:border-primary"
+          />
+        </div>
+
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-sm">
+            <thead>
+              <tr className="border-b border-glass-border">
+                {["Client", "Type", "Subject", "Priority", "Status", "Date", "Action"].map((h) => (
+                  <th key={h} className="pb-3 pr-4 text-xs font-bold uppercase tracking-wider text-primary last:pr-0">{h}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {filtered.length === 0 ? (
+                <tr>
+                  <td colSpan={7} className="py-8 text-center text-sm text-muted">No requests match your filters.</td>
+                </tr>
+              ) : filtered.map((req) => (
+                <RequestRowComponent
+                  key={req.id}
+                  req={req}
+                  isProcessing={isPending && actionId === req.id}
+                  onStatusChange={handleStatusChange}
+                />
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </GlassCard>
+    </>
+  )
+})
+
+export default function AdminRequestsPage() {
+  const [requests, setRequests] = useState<RequestRow[]>([])
+  const [loadError, setLoadError] = useState("")
+
+  const reload = useCallback(() => {
+    getRequestsAction()
+      .then(setRequests)
+      .catch(() => setLoadError("Failed to load requests."))
+  }, [])
+
+  useEffect(reload, [reload])
 
   return (
     <AuthGuard requiredRole="admin">
@@ -168,65 +241,11 @@ export default function AdminRequestsPage() {
           <p className="mt-1 text-sm text-muted">Review and action all platform requests</p>
         </div>
 
-        {/* Filter tabs */}
-        <div className="mt-6 flex flex-wrap gap-2">
-          {ALL_STATUSES.map((s) => (
-            <button
-              key={s}
-              onClick={() => setFilter(s)}
-              className={`rounded-lg px-3 py-1.5 text-xs font-bold transition-colors ${
-                filter === s
-                  ? "bg-gradient-to-r from-primary to-secondary text-primary-foreground"
-                  : "border border-glass-border text-muted hover:text-primary"
-              }`}
-            >
-              {s} ({counts[s]})
-            </button>
-          ))}
-        </div>
-
-        <GlassCard className="mt-4">
-          <div className="relative mb-4">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" />
-            <input
-              type="text"
-              placeholder="Search by client, ID, or subject…"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="h-11 w-full rounded-lg border border-glass-border bg-input pl-10 pr-3 text-base text-foreground outline-none transition-colors placeholder:text-muted-foreground focus:border-primary"
-            />
-          </div>
-
-          {loadError ? (
-            <p className="py-4 text-sm text-destructive">{loadError}</p>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-sm">
-                <thead>
-                  <tr className="border-b border-glass-border">
-                    {["Client", "Type", "Subject", "Priority", "Status", "Date", "Action"].map((h) => (
-                      <th key={h} className="pb-3 pr-4 text-xs font-bold uppercase tracking-wider text-primary last:pr-0">{h}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {filtered.length === 0 ? (
-                    <tr>
-                      <td colSpan={7} className="py-8 text-center text-sm text-muted">No requests match your filters.</td>
-                    </tr>
-                  ) : filtered.map((req) => (
-                    <RequestRowComponent
-                      key={req.id}
-                      req={req}
-                      isProcessing={isPending && actionId === req.id}
-                      onStatusChange={handleStatusChange}
-                    />
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </GlassCard>
+        {loadError ? (
+          <p className="mt-6 py-4 text-sm text-destructive">{loadError}</p>
+        ) : (
+          <RequestWorkspace requests={requests} onReload={reload} />
+        )}
       </main>
     </AuthGuard>
   )
