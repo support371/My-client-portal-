@@ -6,6 +6,12 @@ on:
   pull_request:
     branches: ["main"]
 
+# ⚡ Bolt Optimization: Concurrency control to prevent CI resource exhaustion.
+# Automatically cancels older runs when a new commit is pushed to the same branch.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   build:
     runs-on: ubuntu-latest
