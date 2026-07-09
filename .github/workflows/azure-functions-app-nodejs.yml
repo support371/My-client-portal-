@@ -1,5 +1,3 @@
-# This workflow will build a Node.js project and deploy it to an Azure Functions App on Windows or Linux when a commit is pushed to your default branch.
-
 name: Deploy Node.js project to Azure Function App
 
 on:
@@ -28,7 +26,7 @@ jobs:
       with:
         node-version: ${{ env.NODE_VERSION }}
 
-    - name: 'Resolve Project Dependencies'
+    - name: 'Resolve Project Dependencies Using Npm'
       shell: bash
       run: |
         npm install
