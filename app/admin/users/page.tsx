@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useMemo, memo } from "react"
+import { useState, useEffect, useMemo, memo, useDeferredValue } from "react"
 import { AuthGuard } from "@/components/auth-guard"
 import { PortalHeader } from "@/components/portal-header"
 import { GlassCard } from "@/components/glass-card"
@@ -58,6 +58,7 @@ const UserRowComponent = memo(function UserRowComponent({ user }: { user: UserRo
 export default function AdminUsersPage() {
   const [users, setUsers]     = useState<UserRow[]>([])
   const [search, setSearch]   = useState("")
+  const deferredSearch = useDeferredValue(search)
   const [loadError, setLoadError] = useState("")
 
   useEffect(() => {
@@ -66,10 +67,10 @@ export default function AdminUsersPage() {
       .catch(() => setLoadError("Failed to load users."))
   }, [])
 
-  // ⚡ Bolt Optimization: Memoize filtering logic with pre-normalized search query.
-  // This avoids O(N) recalculations on every render cycle triggered by unrelated state.
+  // ⚡ Bolt Optimization: Memoize filtering logic with deferred search query.
+  // Using useDeferredValue ensures the input remains responsive during filtering.
   const filtered = useMemo(() => {
-    const q = search.toLowerCase().trim()
+    const q = deferredSearch.toLowerCase().trim()
     if (!q) return users
 
     return users.filter((u) =>
@@ -77,7 +78,7 @@ export default function AdminUsersPage() {
       u.email.toLowerCase().includes(q) ||
       u.role.toLowerCase().includes(q)
     )
-  }, [users, search])
+  }, [users, deferredSearch])
 
   return (
     <AuthGuard requiredRole="admin">
