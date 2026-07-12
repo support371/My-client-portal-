@@ -3,11 +3,11 @@
 
 name: Node.js Package
 
-on:
-
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
+
+on:
   release:
     types: [created]
 
