@@ -21,6 +21,10 @@
 name: Deploy Node.js project to Azure Function App
 
 on:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
   push:
     branches: ["main"]
 
