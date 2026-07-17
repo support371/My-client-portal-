@@ -6,6 +6,10 @@ on:
   pull_request:
     branches: [ "main" ]
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -17,12 +21,19 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
+    - name: Install pnpm
+      uses: pnpm/action-setup@v4
+      with:
+        version: 10
+
     - name: Use Node.js ${{ matrix.node-version }}
       uses: actions/setup-node@v4
       with:
         node-version: ${{ matrix.node-version }}
+        cache: 'pnpm'
 
-    - name: Build
+    - name: Install dependencies and build
       run: |
-        npm install
-        npx webpack
+        pnpm install
+        pnpm prisma generate
+        pnpm build
