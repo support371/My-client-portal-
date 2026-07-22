@@ -33,3 +33,7 @@
 ## 2026-05-27 - [O(N) Status Count & Row Memoization]
 **Learning:** Calculating status counts using multiple `.filter()` calls inside a `.reduce()` results in O(S*N) complexity, which becomes a bottleneck as the dataset grows. Additionally, updating a single item in a large list triggers re-renders for all rows if the row component isn't memoized with stable prop references.
 **Action:** Use a single `.reduce()` pass wrapped in `useMemo` for count aggregations. Extract list items into `React.memo` components and pass derived primitive props (like `isProcessing`) instead of global state objects to isolate re-renders.
+
+## 2026-07-22 - [Pre-normalized Search Query Caching]
+**Learning:** In table filtering logic, normalizing query strings (e.g., `.toLowerCase().trim()`) inside the `.filter` callback computes the normalization on every single iteration, increasing CPU usage. Pre-normalizing once outside the loop inside `useMemo` achieves optimal O(N) execution.
+**Action:** Always extract and normalize dynamic search strings outside the array iteration callback when utilizing memoized filtering lists.
