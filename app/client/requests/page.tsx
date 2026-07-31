@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useTransition } from "react"
+import { useState, useEffect, useTransition, memo } from "react"
 import { useAuth } from "@/lib/auth-context"
 import { AuthGuard } from "@/components/auth-guard"
 import { PortalHeader } from "@/components/portal-header"
@@ -10,6 +10,10 @@ import { createRequestAction, getMyRequestsAction, type RequestRow } from "@/lib
 import { FileText, ArrowLeft, Loader2 } from "lucide-react"
 import Link from "next/link"
 
+// ⚡ Bolt Optimization: Move static icon out of render function for stable references.
+const REQUESTS_ICON = <FileText className="h-5 w-5 text-primary" />
+
+// ⚡ Bolt Optimization: The statusVariant mapping must be defined before any memoized components referencing it.
 const statusVariant: Record<string, "default" | "success" | "warning" | "critical" | "info"> = {
   Pending:    "warning",
   Approved:   "success",
@@ -18,6 +22,31 @@ const statusVariant: Record<string, "default" | "success" | "warning" | "critica
 }
 
 const requestTypes = ["Withdrawal", "Deposit", "Support", "Account Change"] as const
+
+/**
+ * ⚡ Bolt Optimization: Memoize individual request items.
+ * This prevents redundant list items re-renders when parent states change (such as during form input).
+ */
+const RequestRowItem = memo(function RequestRowItem({ req }: { req: RequestRow }) {
+  return (
+    <div
+      className="rounded-lg border border-border/50 px-3 py-3 transition-colors hover:bg-surface"
+    >
+      <div className="flex items-center justify-between gap-2">
+        <span className="text-sm font-medium text-foreground">{req.subject}</span>
+        <StatusBadge
+          label={req.status}
+          variant={statusVariant[req.status] ?? "default"}
+        />
+      </div>
+      <div className="mt-1 flex items-center gap-3 text-xs text-muted">
+        <span>{req.type}</span>
+        <span>·</span>
+        <span>{new Date(req.createdAt).toLocaleDateString()}</span>
+      </div>
+    </div>
+  )
+})
 
 export default function ClientRequestsPage() {
   const { session } = useAuth()
@@ -57,7 +86,7 @@ export default function ClientRequestsPage() {
     <AuthGuard requiredRole="client">
       <PortalHeader
         title="My Requests"
-        icon={<FileText className="h-5 w-5 text-primary" />}
+        icon={REQUESTS_ICON}
       />
 
       <main className="mx-auto max-w-5xl px-4 py-6 md:py-10">
@@ -136,24 +165,9 @@ export default function ClientRequestsPage() {
               <p className="text-sm text-muted">No requests on file.</p>
             ) : (
               <div className="space-y-2">
+                {/* ⚡ Bolt Optimization: Keep key on component instance in parent .map() for React reconciliation. */}
                 {requests.map((req) => (
-                  <div
-                    key={req.id}
-                    className="rounded-lg border border-border/50 px-3 py-3 transition-colors hover:bg-surface"
-                  >
-                    <div className="flex items-center justify-between gap-2">
-                      <span className="text-sm font-medium text-foreground">{req.subject}</span>
-                      <StatusBadge
-                        label={req.status}
-                        variant={statusVariant[req.status] ?? "default"}
-                      />
-                    </div>
-                    <div className="mt-1 flex items-center gap-3 text-xs text-muted">
-                      <span>{req.type}</span>
-                      <span>·</span>
-                      <span>{new Date(req.createdAt).toLocaleDateString()}</span>
-                    </div>
-                  </div>
+                  <RequestRowItem key={req.id} req={req} />
                 ))}
               </div>
             )}
