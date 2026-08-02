@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo, memo } from "react"
 import { AuthGuard } from "@/components/auth-guard"
 import { PortalHeader } from "@/components/portal-header"
 import { GlassCard } from "@/components/glass-card"
@@ -9,12 +9,51 @@ import { getUsersAction, type UserRow } from "@/lib/actions/users"
 import { Users, ArrowLeft, Search, ShieldCheck } from "lucide-react"
 import Link from "next/link"
 
+// ⚡ Bolt Optimization: Hoist static Lucide icons outside the render cycle.
+// This prevents recreation of these icons on every render, preserving stable element references.
+const USERS_ICON = <Users className="h-5 w-5 text-primary" />
+const BACK_ICON = <ArrowLeft className="h-4 w-4" />
+const SHIELD_ICON = <ShieldCheck className="h-4 w-4 text-primary" />
+
 const roleVariant: Record<string, "default" | "success" | "warning" | "critical" | "info"> = {
   superadmin: "critical",
   admin:      "warning",
   team:       "info",
   client:     "success",
 }
+
+/**
+ * ⚡ Bolt Optimization: Memoize individual user table rows.
+ * This prevents all user rows from re-rendering when unrelated page state changes (such as search queries).
+ * Keeps the key prop on the component instance in the parent's map loop.
+ */
+const UserRowComponent = memo(function UserRowComponent({ user }: { user: UserRow }) {
+  return (
+    <tr className="border-b border-border/50 hover:bg-surface/50">
+      <td className="py-3 pr-4">
+        <div className="flex items-center gap-2.5">
+          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10">
+            {SHIELD_ICON}
+          </div>
+          <span className="font-medium text-foreground">{user.name}</span>
+        </div>
+      </td>
+      <td className="py-3 pr-4 text-muted">{user.email}</td>
+      <td className="py-3 pr-4">
+        <StatusBadge label={user.role} variant={roleVariant[user.role] ?? "default"} />
+      </td>
+      <td className="py-3 pr-4">
+        <StatusBadge label={user.active ? "Active" : "Inactive"} variant={user.active ? "success" : "critical"} />
+      </td>
+      <td className="py-3 pr-4 text-muted">{new Date(user.createdAt).toLocaleDateString()}</td>
+      <td className="py-3">
+        <button className="rounded-lg border border-glass-border px-3 py-1.5 text-xs font-bold text-primary transition-colors hover:bg-primary/10">
+          Manage
+        </button>
+      </td>
+    </tr>
+  )
+})
 
 export default function AdminUsersPage() {
   const [users, setUsers]     = useState<UserRow[]>([])
@@ -27,20 +66,24 @@ export default function AdminUsersPage() {
       .catch(() => setLoadError("Failed to load users."))
   }, [])
 
-  const filtered = users.filter((u) => {
-    const q = search.toLowerCase()
-    return (
-      u.name.toLowerCase().includes(q) ||
-      u.email.toLowerCase().includes(q) ||
-      u.role.toLowerCase().includes(q)
-    )
-  })
+  // ⚡ Bolt Optimization: Memoize filtering logic and pre-normalize search query outside the loop.
+  // This avoids redundant O(N) calculations on every render, especially when unrelated state changes.
+  const filtered = useMemo(() => {
+    const q = search.toLowerCase().trim()
+    return users.filter((u) => {
+      return (
+        u.name.toLowerCase().includes(q) ||
+        u.email.toLowerCase().includes(q) ||
+        u.role.toLowerCase().includes(q)
+      )
+    })
+  }, [users, search])
 
   return (
     <AuthGuard requiredRole="admin">
       <PortalHeader
         title="User Management"
-        icon={<Users className="h-5 w-5 text-primary" />}
+        icon={USERS_ICON}
       />
 
       <main className="mx-auto max-w-5xl px-4 py-6 md:py-10">
@@ -49,7 +92,7 @@ export default function AdminUsersPage() {
             href="/admin"
             className="flex items-center gap-1.5 text-sm text-muted transition-colors hover:text-primary"
           >
-            <ArrowLeft className="h-4 w-4" />
+            {BACK_ICON}
             Back to Admin Portal
           </Link>
         </div>
@@ -100,29 +143,7 @@ export default function AdminUsersPage() {
                       </td>
                     </tr>
                   ) : filtered.map((user) => (
-                    <tr key={user.id} className="border-b border-border/50 hover:bg-surface/50">
-                      <td className="py-3 pr-4">
-                        <div className="flex items-center gap-2.5">
-                          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10">
-                            <ShieldCheck className="h-4 w-4 text-primary" />
-                          </div>
-                          <span className="font-medium text-foreground">{user.name}</span>
-                        </div>
-                      </td>
-                      <td className="py-3 pr-4 text-muted">{user.email}</td>
-                      <td className="py-3 pr-4">
-                        <StatusBadge label={user.role} variant={roleVariant[user.role] ?? "default"} />
-                      </td>
-                      <td className="py-3 pr-4">
-                        <StatusBadge label={user.active ? "Active" : "Inactive"} variant={user.active ? "success" : "critical"} />
-                      </td>
-                      <td className="py-3 pr-4 text-muted">{new Date(user.createdAt).toLocaleDateString()}</td>
-                      <td className="py-3">
-                        <button className="rounded-lg border border-glass-border px-3 py-1.5 text-xs font-bold text-primary transition-colors hover:bg-primary/10">
-                          Manage
-                        </button>
-                      </td>
-                    </tr>
+                    <UserRowComponent key={user.id} user={user} />
                   ))}
                 </tbody>
               </table>
