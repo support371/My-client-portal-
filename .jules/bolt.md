@@ -33,7 +33,3 @@
 ## 2026-05-27 - [O(N) Status Count & Row Memoization]
 **Learning:** Calculating status counts using multiple `.filter()` calls inside a `.reduce()` results in O(S*N) complexity, which becomes a bottleneck as the dataset grows. Additionally, updating a single item in a large list triggers re-renders for all rows if the row component isn't memoized with stable prop references.
 **Action:** Use a single `.reduce()` pass wrapped in `useMemo` for count aggregations. Extract list items into `React.memo` components and pass derived primitive props (like `isProcessing`) instead of global state objects to isolate re-renders.
-
-## 2026-08-09 - [User Row Memoization & Static Hoisting]
-**Learning:** Admin and management pages rendering lists (like Admin Users) suffer from typing lag and redundant re-renders on every input stroke if individual rows and Lucide icons aren't extracted and memoized. Additionally, pre-normalizing search terms once outside of the filter loop avoids O(N) recalculations on every render.
-**Action:** Extract list items to custom `memo` components, hoist static icons, and use `useMemo` with pre-normalized search term outside the loop.
