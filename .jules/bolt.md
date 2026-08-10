@@ -33,3 +33,7 @@
 ## 2026-05-27 - [O(N) Status Count & Row Memoization]
 **Learning:** Calculating status counts using multiple `.filter()` calls inside a `.reduce()` results in O(S*N) complexity, which becomes a bottleneck as the dataset grows. Additionally, updating a single item in a large list triggers re-renders for all rows if the row component isn't memoized with stable prop references.
 **Action:** Use a single `.reduce()` pass wrapped in `useMemo` for count aggregations. Extract list items into `React.memo` components and pass derived primitive props (like `isProcessing`) instead of global state objects to isolate re-renders.
+
+## 2026-08-10 - [User Directory Rendering Optimization]
+**Learning:** In list views with search functionality, unmemoized list rows re-render on every keystroke in the search bar. Combining icon hoisting (to prevent unstable JSX references), memoized row components (via `React.memo`), and pre-normalized search query filtering inside a `useMemo` ensures lightning-fast search performance and minimal DOM updates.
+**Action:** For all list/directory dashboards, follow the complete recipe: hoist icons, memoize rows with stable `key` props, and wrap list-filtering with pre-normalized search query in `useMemo`.
