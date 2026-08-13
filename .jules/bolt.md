@@ -33,3 +33,7 @@
 ## 2026-05-27 - [O(N) Status Count & Row Memoization]
 **Learning:** Calculating status counts using multiple `.filter()` calls inside a `.reduce()` results in O(S*N) complexity, which becomes a bottleneck as the dataset grows. Additionally, updating a single item in a large list triggers re-renders for all rows if the row component isn't memoized with stable prop references.
 **Action:** Use a single `.reduce()` pass wrapped in `useMemo` for count aggregations. Extract list items into `React.memo` components and pass derived primitive props (like `isProcessing`) instead of global state objects to isolate re-renders.
+
+## 2026-08-13 - [Controlled Search Input with List and Icon Memoization]
+**Learning:** Having controlled search inputs directly inside a parent component that displays lists of items causes severe typing lag if not optimized. Since search input triggers state updates on every keystroke, the entire parent component re-renders. By extracting individual rows into a memoized `UserRowComponent`, hoisting static JSX icons outside the render cycle, and wrapping the `.filter()` logic in a `useMemo` with search query normalization performed once, we completely skip expensive list reconciliations on each keystroke.
+**Action:** Always extract and memoize list row components, pre-normalize search query values once outside the filter loop inside `useMemo`, and hoist static React icon elements to module scope when optimizing search and list pages.
